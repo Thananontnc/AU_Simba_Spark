@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic';
 type Timeframe = { id: number; label: string; start_date: string; end_date: string };
 
 export default async function TimeframesPage() {
-  const timeframes = await sql`SELECT id, label, start_date, end_date FROM timeframes ORDER BY start_date`;
+  const timeframes = await sql`SELECT id, label, start_date::text, end_date::text FROM timeframes ORDER BY start_date`;
 
   return (
     <div>

@@ -47,7 +47,7 @@ export default async function CoursesPage() {
       <form action={async (fd: FormData) => { 'use server'; await createCourseWithSection(fd); }}
         className="rounded-xl p-5 mb-6" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
         <p className="font-semibold text-sm mb-4" style={{ color: 'var(--tx)' }}>New Section</p>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 mb-4">
           {[
             { label: 'Course Name', name: 'course_name', placeholder: 'Introduction to…' },
             { label: 'Course Code', name: 'course_code', placeholder: 'CS101' },
@@ -89,8 +89,8 @@ export default async function CoursesPage() {
             <div key={sec.id} className="rounded-xl overflow-hidden" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
 
               {/* Section header row */}
-              <div className="flex items-center justify-between px-5 py-3.5" style={{ borderBottom: '1px solid var(--border)', background: 'var(--subtle)' }}>
-                <div className="flex items-center gap-3">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-5 py-3.5" style={{ borderBottom: '1px solid var(--border)', background: 'var(--subtle)' }}>
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
                   <div>
                     <span className="font-semibold text-sm" style={{ color: 'var(--tx)' }}>{sec.course_name}</span>
                     <span className="text-sm ml-2" style={{ color: 'var(--tx-2)' }}>{sec.course_code}</span>
@@ -108,7 +108,7 @@ export default async function CoursesPage() {
                 </form>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x" style={{ '--divide-color': 'var(--border)' } as React.CSSProperties}>
+              <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-[var(--border)]">
 
                 {/* Instructor */}
                 <div className="p-5">
@@ -129,7 +129,7 @@ export default async function CoursesPage() {
                 </div>
 
                 {/* Students */}
-                <div className="p-5" style={{ borderLeft: '1px solid var(--border)' }}>
+                <div className="p-5">
                   <p className="text-xs font-semibold uppercase tracking-wide mb-3" style={{ color: 'var(--tx-2)' }}>
                     Students <span style={{ color: 'var(--accent)' }}>({sec.enrolled_count})</span>
                   </p>
