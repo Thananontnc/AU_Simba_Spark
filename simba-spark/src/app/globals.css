@@ -210,3 +210,40 @@ html {
   animation: viewFade 0.25s ease forwards;
 }
 
+/* Credits tracking bar — animates its fill width on mount (spec: "animates
+   its progress fill when a new course is successfully locked in"). */
+@keyframes creditFill {
+  from { width: 0%; }
+}
+.credit-fill {
+  animation: creditFill 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Notification pulse — a soft orange outline ring that breathes, used for
+   unresolved conflict / override alerts. Stops once dismissed. */
+@keyframes notifPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(245, 132, 31, 0.0); }
+  50%      { box-shadow: 0 0 0 3px rgba(245, 132, 31, 0.35); }
+}
+.notif-pulse {
+  animation: notifPulse 2s ease-in-out infinite;
+}
+
+/* Dismiss fade-out — collapses height + fades a notification card out. */
+@keyframes notifOut {
+  from { opacity: 1; transform: translateX(0); max-height: 200px; }
+  to   { opacity: 0; transform: translateX(8px); max-height: 0; padding-top: 0; padding-bottom: 0; margin-bottom: 0; }
+}
+.notif-out {
+  animation: notifOut 0.32s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  overflow: hidden;
+}
+
+/* Soft hover glow for course cards (spec: "light up with a soft orange glow
+   when hovered, revealing a button to expand details"). Reuses the same
+   visual language as the schedule cards for consistency. */
+.course-glow:hover {
+  box-shadow: 0 0 0 1px var(--accent), 0 0 20px rgba(245, 132, 31, 0.35);
+  border-color: var(--accent);
+}
+

@@ -107,3 +107,31 @@ export function monthMatrix(iso: string): (string | null)[][] {
 export function isWithin(iso: string, start: string, end: string): boolean {
   return iso >= start && iso <= end;
 }
+
+/** Long weekday name for an ISO date, e.g. "Monday". */
+export function longWeekdayName(iso: string): string {
+  const LONG = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  return LONG[parseDate(iso).getDay()];
+}
+
+/**
+ * Given a list of weekday ISO dates (a 10-day block split into two Mon–Fri
+ * weeks), return the Sun–Sat column layout the nostalgic timetable expects.
+ *
+ * Each weekday maps to a { dayName, iso } column header; weekends are null
+ * columns (rendered as a faint "Weekend" cell, no sessions). The result is
+ * always 7 entries so the grid stays a consistent 7-day view while honoring
+ * the 10-day block logic underneath.
+ */
+export function weekColumns(weekDays: string[]): ({ dayName: string; iso: string } | null)[] {
+  const SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  // Map iso → short name, then place into the Sun..Sat slots of one week.
+  const byDow: Record<number, string> = {};
+  weekDays.forEach((iso) => {
+    byDow[parseDate(iso).getDay()] = iso;
+  });
+  return [0, 1, 2, 3, 4, 5, 6].map((dow) => {
+    const iso = byDow[dow];
+    return iso ? { dayName: SHORT[dow], iso } : null;
+  });
+}

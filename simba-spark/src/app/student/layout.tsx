@@ -3,14 +3,14 @@ import StudentSidebar from './sidebar';
 import { mockDashboardData } from '@/lib/mock-data';
 
 export default function StudentLayout({ children }: { children: React.ReactNode }) {
-  // MOCK PHASE: read identity from mock data. When real auth is wired in,
-  // replace these two lines with `const session = await auth();` and read
-  // `session.user.name` / `session.user.email`.
-  const { student } = mockDashboardData;
+  // MOCK PHASE: read identity + enrolled courses from mock data to populate the
+  // nostalgic sidebar profile block. When real auth is wired in, replace with
+  // `const session = await auth();` and read session.user fields.
+  const data = mockDashboardData;
 
   return (
     <div className="min-h-screen flex" style={{ background: 'var(--bg)', color: 'var(--tx)' }}>
-      <StudentSidebar userName={student.fullName} userEmail={student.email} />
+      <StudentSidebar data={data} />
 
       {/* Content column */}
       <div className="flex-1 flex flex-col min-w-0">
@@ -24,11 +24,10 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
               Simba Spark
             </span>
           </div>
-          {/* Spacer on desktop */}
           <div className="hidden lg:block" />
           <ThemeToggle />
         </header>
-        <main className="flex-1 overflow-auto p-4 sm:p-6 lg:p-8">{children}</main>
+        <main className="flex-1 overflow-auto p-4 sm:p-6">{children}</main>
       </div>
     </div>
   );

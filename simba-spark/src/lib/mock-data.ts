@@ -31,6 +31,10 @@ const users: User[] = [
     isAuthorized: true,
     msOid: '9a7c2f1e-4b3d-4c8a-9e6f-7d2b1a0c3e4f',
     msVerified: true,
+    // Nostalgic profile summary fields (sidebar top block).
+    studentId: '6401-2345',
+    gpa: 3.65,
+    department: 'School of Information Technology',
   },
   {
     id: 2,

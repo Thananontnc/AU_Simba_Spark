@@ -1,5 +1,8 @@
-import Hero from './components/hero';
-import Schedule from './components/schedule';
+import TopBanner from './components/top-banner';
+import TimetableGrid from './components/timetable-grid';
+import CourseDirectory from './components/course-directory';
+import RightPanel from './components/right-panel';
+import ProfileCard from './components/profile-card';
 import { mockDashboardData } from '@/lib/mock-data';
 
 export const dynamic = 'force-dynamic'; // dashboard shows live-ish data, never build-time frozen
@@ -11,41 +14,36 @@ export default function StudentPage() {
   const data = mockDashboardData;
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
-      <Hero data={data} />
-      <Schedule data={data} />
+    // 3-column dashboard inspired by the reference layout (but scoped to
+    // Simba Spark features only):
+    //   Sidebar (in layout) → Central grid → Right widget panel
+    // Collapses gracefully on smaller screens.
+    <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_340px] gap-6">
+      {/* ---------- CENTER COLUMN ---------- */}
+      <div className="space-y-6 min-w-0">
+        {/* #overview anchor — banner sits at the top, acts as the hero */}
+        <div id="overview" className="scroll-mt-20">
+          <TopBanner data={data} />
+        </div>
 
-      {/* Placeholders for Step 4 — filled in next. */}
-      <SectionPlaceholder
-        id="directory"
-        title="Course Directory"
-        copy="A searchable list of your registered and multi-faculty courses."
-      />
-      <SectionPlaceholder
-        id="notifications"
-        title="Notification Feed"
-        copy="Real-time administrative updates and timeframe changes."
-      />
-    </div>
-  );
-}
+        {/* #schedule anchor — the 10-day block timetable */}
+        <div id="schedule" className="scroll-mt-20">
+          <TimetableGrid data={data} />
+        </div>
 
-/** Temporary placeholder — replaced by the real component in Step 4. */
-function SectionPlaceholder({ id, title, copy }: { id: string; title: string; copy: string }) {
-  return (
-    <section id={id} className="card-premium p-6 scroll-mt-20 animate-fade-in">
-      <h2 className="text-lg font-bold" style={{ color: 'var(--tx)' }}>
-        {title}
-      </h2>
-      <p className="text-sm mt-1" style={{ color: 'var(--tx-2)' }}>
-        {copy}
-      </p>
-      <div
-        className="mt-4 rounded-xl border border-dashed py-10 text-center text-sm"
-        style={{ borderColor: 'var(--border)', color: 'var(--tx-3)' }}
-      >
-        Coming up in a later step
+        {/* #directory anchor — enrolled courses */}
+        <div id="directory" className="scroll-mt-20">
+          <CourseDirectory data={data} />
+        </div>
+
+        {/* #profile anchor — student profile / Microsoft identity */}
+        <div id="profile" className="scroll-mt-20">
+          <ProfileCard data={data} />
+        </div>
       </div>
-    </section>
+
+      {/* ---------- RIGHT COLUMN (scoped widget panel) ---------- */}
+      <RightPanel data={data} />
+    </div>
   );
 }

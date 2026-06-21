@@ -15,6 +15,9 @@ export type Role = 'admin' | 'instructor' | 'student';
  * A person in the system. The `student` variant is what the dashboard renders.
  * `msOid` and `msVerified` model the "Microsoft Identity" mapping called out in
  * the spec (verified identity display).
+ *
+ * `studentId`, `gpa`, `department`, and `avatarUrl` populate the nostalgic
+ * profile summary at the top of the sidebar (modernized AU Spark layout).
  */
 export interface User {
   id: number;
@@ -26,6 +29,12 @@ export interface User {
   msOid?: string;
   /** True once Microsoft identity verification completed. */
   msVerified?: boolean;
+  /** Student-facing profile fields (sidebar summary). */
+  studentId?: string;
+  gpa?: number;
+  department?: string;
+  /** Optional avatar URL; if absent we render an initials avatar. */
+  avatarUrl?: string;
 }
 
 /**
