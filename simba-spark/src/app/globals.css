@@ -44,6 +44,11 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* Smooth anchor scrolling for the student dashboard's in-page nav. */
+html {
+  scroll-behavior: smooth;
+}
+
 * { box-sizing: border-box; }
 
 ::-webkit-scrollbar { width: 5px; height: 5px; }
