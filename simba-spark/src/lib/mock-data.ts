@@ -17,6 +17,7 @@ import type {
   EnrolledCourse,
   StudentDashboardData,
 } from './types';
+import { weekdaysInRange } from './date-utils';
 
 // ---------------------------------------------------------------------------
 // Users
@@ -126,17 +127,11 @@ const sections: Section[] = [
 // ---------------------------------------------------------------------------
 // Bookings — generate the continuous 10-day pattern per section
 // ---------------------------------------------------------------------------
-// Helper: list the 10 weekdays inside a timeframe window, as ISO dates.
-function weekdaysInRange(start: string, end: string): string[] {
-  const out: string[] = [];
-  const s = new Date(start + 'T00:00:00');
-  const e = new Date(end + 'T00:00:00');
-  for (let d = new Date(s); d <= e; d.setDate(d.getDate() + 1)) {
-    const dow = d.getDay(); // 0 Sun … 6 Sat
-    if (dow !== 0 && dow !== 6) out.push(d.toISOString().slice(0, 10));
-  }
-  return out;
-}
+// `weekdaysInRange` is imported from date-utils.ts (timezone-safe). The local
+// copy that used to live here had a UTC bug: `toISOString()` shifted local
+// midnight back one day in negative timezones, so the range Jun 15–26 became
+// Jun 14–25 and weekday labels no longer matched the dates. Reusing the safe
+// helper fixes that.
 
 /**
  * Build one booking per weekday for a section. Real block courses hold the
@@ -166,7 +161,8 @@ function buildBlock(
 const block1 = timeframes[0];
 
 const bookings: Booking[] = [
-  // CS101 — daily 09:00–10:30 in A72. One admin override to demo the pulse.
+  // CS101 — daily 09:00–10:30 in A72. One admin override (Mon 22 Jun) to demo
+  // the pulse interaction.
   ...buildBlock(1, 'Room A72', block1, '09:00', '10:30', ['2026-06-22']),
   // MA101 — daily 11:00–12:30 in B10.
   ...buildBlock(2, 'Room B10', block1, '11:00', '12:30'),

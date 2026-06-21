@@ -1,4 +1,5 @@
 import Hero from './components/hero';
+import Schedule from './components/schedule';
 import { mockDashboardData } from '@/lib/mock-data';
 
 export const dynamic = 'force-dynamic'; // dashboard shows live-ish data, never build-time frozen
@@ -12,13 +13,9 @@ export default function StudentPage() {
   return (
     <div className="max-w-6xl mx-auto space-y-6">
       <Hero data={data} />
+      <Schedule data={data} />
 
-      {/* Placeholders for Steps 3 & 4 — they'll be filled in next. */}
-      <SectionPlaceholder
-        id="schedule"
-        title="Personalized Schedule"
-        copy="Your continuous 10-day block course calendar will appear here."
-      />
+      {/* Placeholders for Step 4 — filled in next. */}
       <SectionPlaceholder
         id="directory"
         title="Course Directory"
@@ -33,7 +30,7 @@ export default function StudentPage() {
   );
 }
 
-/** Temporary placeholder — replaced by real components in Steps 3 & 4. */
+/** Temporary placeholder — replaced by the real component in Step 4. */
 function SectionPlaceholder({ id, title, copy }: { id: string; title: string; copy: string }) {
   return (
     <section id={id} className="card-premium p-6 scroll-mt-20 animate-fade-in">
