@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import type { StudentDashboardData } from '@/lib/types';
 
 // Simba Spark navigation — scoped to OUR app only. We borrow the reference's
@@ -59,6 +60,32 @@ export default function StudentSidebar({ data }: Props) {
       className="w-64 shrink-0 flex flex-col h-full overflow-y-auto"
       style={{ background: 'var(--sidebar)', borderRight: '1px solid var(--border)' }}
     >
+      {/* ---------- Brand Logo & App Name ---------- */}
+      <button
+        onClick={() => window.location.reload()}
+        className="group flex items-center gap-3 px-6 pt-6 pb-4 select-none w-full text-left focus:outline-none cursor-pointer"
+        aria-label="Refresh page"
+      >
+        <div className="flex items-center justify-center shrink-0">
+          <Image
+            src="/simba-logo.webp"
+            alt="Simba Spark Logo"
+            width={24}
+            height={24}
+            className="shrink-0 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6"
+            priority
+          />
+        </div>
+        <div className="text-lg font-bold tracking-wider flex items-center transition-all duration-300 transform group-hover:translate-x-1 group-hover:scale-[1.02] origin-left">
+          <span className="text-zinc-800 dark:text-slate-100 transition-colors duration-300 group-hover:text-zinc-950 dark:group-hover:text-white">
+            SIMBA
+          </span>
+          <span className="text-[#FF6B00] ml-1.5 dark:text-[#f5841f] transition-colors duration-300 group-hover:text-[#ff8522] dark:group-hover:text-[#ffb03a]">
+            SPARK
+          </span>
+        </div>
+      </button>
+
       {/* ---------- Profile summary block (top) ---------- */}
       <div className="p-5 flex flex-col items-center text-center" style={{ borderBottom: '1px solid var(--border)' }}>
         {/* Avatar (initials fallback) */}
