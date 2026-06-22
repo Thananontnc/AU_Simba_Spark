@@ -31,7 +31,7 @@ export default function TimetableGrid({ data }: Props) {
   const { currentBlock, enrolledCourses } = data;
   const [weekIdx, setWeekIdx] = useState(0);
   const [expandedId, setExpandedId] = useState<number | null>(null);
-  const [activeFilter, setActiveFilter] = useState<'all' | 'lecture' | 'lab'>('all');
+  const [selectedDayIso, setSelectedDayIso] = useState<string | null>(null);
 
   const blockDays = useMemo(
     () => (currentBlock ? weekdaysInRange(currentBlock.startDate, currentBlock.endDate) : []),
@@ -50,9 +50,28 @@ export default function TimetableGrid({ data }: Props) {
     [enrolledCourses],
   );
 
-  // "Now" context — drives the in-session highlight.
-  const nowIso = new Date().toISOString().slice(0, 10);
-  const nowMin = minutesNow();
+  // Timezone-safe local ISO date and "Now" minutes
+  const nowIso = useMemo(() => {
+    const d = new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  }, []);
+
+  const nowMin = useMemo(() => minutesNow(), []);
+
+  const todayWeekIdx = useMemo(() => {
+    return weeks.findIndex((week) => week.includes(nowIso));
+  }, [weeks, nowIso]);
+
+  const handleDayClick = (iso: string) => {
+    if (selectedDayIso === iso) {
+      setSelectedDayIso(null);
+    } else {
+      setSelectedDayIso(iso);
+    }
+  };
 
   if (!currentBlock || weeks.length === 0) {
     return (
@@ -80,37 +99,57 @@ export default function TimetableGrid({ data }: Props) {
         {/* Header row: corner + day columns */}
         <div style={{ gridColumn: 1, gridRow: 1 }} />
         {wColumns.map((col, i) => {
-          const isToday = col?.iso === nowIso;
-          return (
-            <div
-              key={i}
-              className="text-center pb-2 select-none"
-              style={{ gridColumn: i + 2, gridRow: 1 }}
-            >
-              {col ? (
-                <>
-                  <p
-                    className="text-[10px] font-semibold uppercase tracking-wider"
-                    style={{ color: isToday ? 'var(--accent-2)' : 'var(--tx-3)' }}
-                  >
-                    {col.dayName}
-                  </p>
-                  <p
-                    className="text-xs font-bold mt-0.5 inline-flex items-center justify-center min-w-[24px] h-6 rounded-lg px-1.5"
-                    style={{
-                      color: isToday ? 'var(--accent-fg)' : 'var(--tx)',
-                      background: isToday ? 'var(--accent)' : 'transparent',
-                    }}
-                  >
-                    {col.iso.split('-')[2]}
-                  </p>
-                </>
-              ) : (
-                <p className="text-[10px] pt-2" style={{ color: 'var(--tx-3)', opacity: 0.4 }}>
+          if (!col) {
+            return (
+              <div
+                key={i}
+                className="text-center pb-2 select-none opacity-30 flex flex-col items-center justify-center pt-2"
+                style={{ gridColumn: i + 2, gridRow: 1 }}
+              >
+                <p className="text-[10px]" style={{ color: 'var(--tx-3)' }}>
                   {i === 0 ? 'Sun' : 'Sat'}
                 </p>
-              )}
-            </div>
+              </div>
+            );
+          }
+
+          const isToday = col.iso === nowIso;
+          const isSelected = selectedDayIso === col.iso;
+
+          // Header button styling based on state
+          let dateClass = 'border-transparent text-[var(--tx)] bg-transparent group-hover:border-orange-500/30';
+          let labelClass = 'text-[var(--tx-3)] group-hover:text-[var(--accent)]';
+
+          if (isSelected) {
+            dateClass = 'bg-[var(--accent)] text-[var(--accent-fg)] border-transparent';
+            labelClass = 'text-[var(--accent-2)]';
+          } else if (isToday) {
+            dateClass = 'border-[var(--accent)] text-[var(--accent)] bg-transparent';
+            labelClass = 'text-[var(--accent)]';
+          }
+
+          return (
+            <button
+              key={col.iso}
+              onClick={() => handleDayClick(col.iso)}
+              className="w-full flex flex-col items-center justify-center py-2 active:scale-[0.97] cursor-pointer select-none focus:outline-none group transition-all duration-300"
+              style={{
+                gridColumn: i + 2,
+                gridRow: 1,
+                opacity: selectedDayIso !== null && !isSelected ? 0.35 : 1,
+              }}
+            >
+              <p
+                className={`text-[10px] font-semibold uppercase tracking-wider transition-colors duration-300 ${labelClass}`}
+              >
+                {col.dayName}
+              </p>
+              <p
+                className={`text-xs font-bold mt-0.5 inline-flex items-center justify-center min-w-[24px] h-6 rounded-lg px-1.5 border transition-all duration-300 group-hover:scale-105 ${dateClass}`}
+              >
+                {col.iso.split('-')[2]}
+              </p>
+            </button>
           );
         })}
 
@@ -132,10 +171,12 @@ export default function TimetableGrid({ data }: Props) {
               {wColumns.map((col, ci) => {
                 const gridCol = ci + 2;
                 if (!col) {
-                  return <WeekendCell key={ci} gridCol={gridCol} gridRow={gridRow} />;
+                  return <WeekendCell key={ci} gridCol={gridCol} gridRow={gridRow} isDimmed={selectedDayIso !== null} />;
                 }
 
                 const isToday = col.iso === nowIso;
+                const isSelected = selectedDayIso === col.iso;
+                const isDimmed = selectedDayIso !== null && !isSelected;
 
                 // Check if this hour slot overlaps with any booking on this day
                 const slotStart = toMin(hour);
@@ -149,7 +190,7 @@ export default function TimetableGrid({ data }: Props) {
                 });
 
                 if (!overlappingBooking) {
-                  return <EmptyCell key={ci} isToday={isToday} gridCol={gridCol} gridRow={gridRow} />;
+                  return <EmptyCell key={ci} isToday={isToday} gridCol={gridCol} gridRow={gridRow} isDimmed={isDimmed} />;
                 }
 
                 // If overlapping booking exists, find all hours in HOURS that overlap with it
@@ -181,7 +222,7 @@ export default function TimetableGrid({ data }: Props) {
                       isToday={isToday}
                       inSession={inSession}
                       onToggle={() => setExpandedId(expandedId === overlappingBooking.id ? null : overlappingBooking.id)}
-                      matchesFilter={activeFilter === 'all' || overlappingBooking.type === activeFilter}
+                      isDimmed={isDimmed}
                       gridCol={gridCol}
                       gridRow={gridRow}
                     />
@@ -205,26 +246,36 @@ export default function TimetableGrid({ data }: Props) {
     >
       {/* Subtle Segmented Filter Controls */}
       <div className="flex items-center justify-between mb-4 pb-4 border-b border-[var(--border)]">
-        <span className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
-          Filter View
-        </span>
-        <div 
-          className="flex items-center gap-1 rounded-xl p-1" 
-          style={{ background: 'var(--subtle)', border: '1px solid var(--border)' }}
-        >
-          {(['all', 'lecture', 'lab'] as const).map((filterOpt) => (
-            <button
-              key={filterOpt}
-              onClick={() => setActiveFilter(filterOpt)}
-              className="px-3 py-1 rounded-lg text-xs font-semibold transition-all duration-300 ease-in-out cursor-pointer border-none"
-              style={{
-                background: activeFilter === filterOpt ? 'var(--accent)' : 'transparent',
-                color: activeFilter === filterOpt ? 'var(--accent-fg)' : 'var(--tx-2)',
-              }}
-            >
-              {filterOpt === 'all' ? 'All' : filterOpt === 'lecture' ? 'Lectures Only' : 'Labs Only'}
-            </button>
-          ))}
+        <div className="flex items-center gap-1.5">
+          <button
+            onClick={() => setSelectedDayIso(null)}
+            className="px-4 py-1.5 rounded-lg text-xs font-semibold border transition-all duration-300 ease-in-out cursor-pointer hover:text-[var(--tx)] hover:border-orange-500/30"
+            style={{
+              background: selectedDayIso === null ? 'var(--accent)' : 'transparent',
+              borderColor: selectedDayIso === null ? 'var(--accent)' : 'var(--border)',
+              color: selectedDayIso === null ? 'var(--accent-fg)' : 'var(--tx-3)',
+              opacity: selectedDayIso === null ? 1 : 0.5,
+            }}
+          >
+            All
+          </button>
+          <button
+            onClick={() => {
+              setSelectedDayIso(nowIso);
+              if (todayWeekIdx !== -1) {
+                setWeekIdx(todayWeekIdx);
+              }
+            }}
+            className="px-4 py-1.5 rounded-lg text-xs font-semibold border transition-all duration-300 ease-in-out cursor-pointer hover:text-[var(--tx)] hover:border-orange-500/30"
+            style={{
+              background: selectedDayIso === nowIso ? 'var(--accent)' : 'transparent',
+              borderColor: selectedDayIso === nowIso ? 'var(--accent)' : 'var(--border)',
+              color: selectedDayIso === nowIso ? 'var(--accent-fg)' : 'var(--tx-3)',
+              opacity: selectedDayIso === nowIso ? 1 : 0.5,
+            }}
+          >
+            Today
+          </button>
         </div>
       </div>
 
@@ -241,7 +292,10 @@ export default function TimetableGrid({ data }: Props) {
           {weeks.map((_, i) => (
             <button
               key={i}
-              onClick={() => setWeekIdx(i)}
+              onClick={() => {
+                setWeekIdx(i);
+                setSelectedDayIso(null);
+              }}
               className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
               style={{
                 background: weekIdx === i ? 'var(--accent)' : 'transparent',
@@ -302,7 +356,7 @@ function TimetableCard({
   isToday,
   inSession,
   onToggle,
-  matchesFilter,
+  isDimmed,
   gridCol,
   gridRow,
 }: {
@@ -314,7 +368,7 @@ function TimetableCard({
   isToday: boolean;
   inSession: boolean;
   onToggle: () => void;
-  matchesFilter: boolean;
+  isDimmed: boolean;
   gridCol: number;
   gridRow: number;
 }) {
@@ -334,7 +388,7 @@ function TimetableCard({
           : 'border-[var(--border)] hover:border-[#FF7A1A]/50 dark:hover:border-[#FF6B00]/60',
         isOverride ? 'block-override' : '',
         inSession ? 'block-now ring-2 ring-orange-400/50 animate-pulse' : '',
-        matchesFilter ? 'opacity-100 scale-100' : 'opacity-30 scale-[0.98] pointer-events-none',
+        isDimmed ? 'opacity-15 scale-[0.98] pointer-events-none blur-[0.5px]' : 'opacity-100 scale-100',
       ].join(' ')}
       style={{
         background: fill,
@@ -402,16 +456,19 @@ function RowFragment({ children }: { children: React.ReactNode }) {
 }
 
 /** Weekend — ultra-faint, clearly not a teaching day. */
-function WeekendCell({ gridCol, gridRow }: { gridCol: number; gridRow: number }) {
+function WeekendCell({ gridCol, gridRow, isDimmed }: { gridCol: number; gridRow: number; isDimmed: boolean }) {
   return (
     <div
-      className="rounded-xl flex items-center justify-center"
+      className="rounded-xl flex items-center justify-center transition-all duration-300 ease-in-out"
       style={{
         background: 'var(--empty-cell-bg)',
         border: '1px solid var(--empty-cell-border)',
         minHeight: 52,
         gridColumn: gridCol,
         gridRow: gridRow,
+        opacity: isDimmed ? 0.15 : 1,
+        filter: isDimmed ? 'blur(0.5px)' : 'none',
+        pointerEvents: isDimmed ? 'none' : 'auto',
       }}
     >
       <span className="text-[9px]" style={{ color: 'var(--tx-3)', opacity: 0.35 }}>—</span>
@@ -420,7 +477,7 @@ function WeekendCell({ gridCol, gridRow }: { gridCol: number; gridRow: number })
 }
 
 /** Empty cell — clean hollow free-time placeholder. Transitioning container with dash / Free + icons cross-fading */
-function EmptyCell({ isToday, gridCol, gridRow }: { isToday: boolean; gridCol: number; gridRow: number }) {
+function EmptyCell({ isToday, gridCol, gridRow, isDimmed }: { isToday: boolean; gridCol: number; gridRow: number; isDimmed: boolean }) {
   return (
     <div
       className="rounded-xl transition-all duration-300 ease-in-out cursor-pointer flex items-center justify-center group relative min-h-[52px] hover:bg-orange-500/[0.04] dark:hover:bg-orange-500/[0.03] hover:border-[#FF6B00]/30 dark:hover:border-[#FF6B00]/20"
@@ -430,6 +487,9 @@ function EmptyCell({ isToday, gridCol, gridRow }: { isToday: boolean; gridCol: n
         borderColor: isToday ? 'var(--empty-cell-border-today)' : 'var(--empty-cell-border)',
         gridColumn: gridCol,
         gridRow: gridRow,
+        opacity: isDimmed ? 0.15 : 1,
+        filter: isDimmed ? 'blur(0.5px)' : 'none',
+        pointerEvents: isDimmed ? 'none' : 'auto',
       }}
     >
       {/* Simple dash showing when not hovered, fades out on hover */}
