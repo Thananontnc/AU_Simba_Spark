@@ -146,8 +146,8 @@ function CourseCard({
 
   return (
     <div
-      className="course-glow rounded-xl p-4 transition-all duration-200"
-      style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
+      className="rounded-xl p-4 border border-[var(--border)] transition-all duration-300 ease-in-out hover:border-[#FF7A1A]/50 dark:hover:border-[#FF6B00]/60 hover:shadow-md hover:shadow-orange-500/[0.06] hover:-translate-y-0.5"
+      style={{ background: 'var(--surface)' }}
     >
       {/* Top row: code + name + credits */}
       <div className="flex items-start justify-between gap-3">

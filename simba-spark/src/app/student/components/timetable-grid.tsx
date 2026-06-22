@@ -6,29 +6,32 @@ import { weekdaysInRange, chunkWeeks, weekColumns, timeBand } from '@/lib/date-u
 
 type Props = { data: StudentDashboardData };
 
-// Warm, eye-friendly palette — all orange-family + warm grays (no harsh colors).
-// Each course gets one shade so the eye can distinguish sessions without the
-// original's jarring red/purple/green/blue.
-const COURSE_SHADES: Record<string, { bg: string; border: string; text: string }> = {
-  default: { bg: 'rgba(245,132,31,0.14)', border: 'rgba(245,132,31,0.35)', text: '#c45f00' },
-};
-// Stable shade per course id (deterministic, not random on re-render).
-function shadeFor(courseId: number) {
-  const palette = [
-    { bg: 'rgba(245,132,31,0.18)', border: 'rgba(245,132,31,0.45)', text: '#b85600' }, // deep orange
-    { bg: 'rgba(232,114,13,0.16)',  border: 'rgba(232,114,13,0.4)',  text: '#9a4a00' }, // burnt orange
-    { bg: 'rgba(245,168,80,0.18)',  border: 'rgba(245,168,80,0.45)', text: '#a85a10' }, // warm amber
-    { bg: 'rgba(210,138,90,0.16)',  border: 'rgba(210,138,90,0.4)',  text: '#7a3f12' }, // warm clay
-  ];
-  return palette[courseId % palette.length];
+// ────────────────────────────────────────────────────────────────────────────
+// RIGID HOURLY GRID — rows are every hour from 09:00 to 15:00. This makes time
+// GAPS between classes visible as faint empty cells (a class at 09:00–10:30
+// leaves 10:00 + 10:30 + half of 11:00 as free time). Real-timetable behavior.
+// ────────────────────────────────────────────────────────────────────────────
+const HOURS = ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00'] as const;
+
+// Stable warm-orange shade per time band (same time = same color).
+function shadeForTime(startTime: string) {
+  const hour = parseInt(startTime.split(':')[0], 10) || 0;
+  
+  // Strict time-based horizontal color mapping
+  if (hour <= 10) {
+    return { bg: '#FF6B00', text: '#FFFFFF' }; // 09:00 - Vibrant orange
+  } else if (hour >= 11 && hour <= 13) {
+    return { bg: '#FF944D', text: '#FFFFFF' }; // 11:00 - Softer, lighter coral/peach
+  } else {
+    return { bg: '#C25100', text: '#FFFFFF' }; // 14:00+ - Deep rich burnt-orange
+  }
 }
 
 export default function TimetableGrid({ data }: Props) {
   const { currentBlock, enrolledCourses } = data;
-  const [weekIdx, setWeekIdx] = useState(0); // which of the 2 weeks to show
-  const [hoveredCourseId, setHoveredCourseId] = useState<number | null>(null);
+  const [weekIdx, setWeekIdx] = useState(0);
   const [expandedId, setExpandedId] = useState<number | null>(null);
-  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [activeFilter, setActiveFilter] = useState<'all' | 'lecture' | 'lab'>('all');
 
   const blockDays = useMemo(
     () => (currentBlock ? weekdaysInRange(currentBlock.startDate, currentBlock.endDate) : []),
@@ -47,6 +50,10 @@ export default function TimetableGrid({ data }: Props) {
     [enrolledCourses],
   );
 
+  // "Now" context — drives the in-session highlight.
+  const nowIso = new Date().toISOString().slice(0, 10);
+  const nowMin = minutesNow();
+
   if (!currentBlock || weeks.length === 0) {
     return (
       <section className="card-premium p-6">
@@ -56,40 +63,151 @@ export default function TimetableGrid({ data }: Props) {
     );
   }
 
-  const currentWeek = weeks[weekIdx] ?? [];
-  const columns = weekColumns(currentWeek); // Sun..Sat, nulls for weekends
-
-  // Build a set of unique time bands across the week (the row labels).
-  const rowBands = useMemo(() => {
-    const set = new Set<string>();
-    currentWeek.forEach((iso) =>
-      allBookings
-        .filter((b) => b.date === iso)
-        .forEach((b) => set.add(`${b.startTime}-${b.endTime}`)),
-    );
-    return Array.from(set).sort();
-  }, [currentWeek, allBookings]);
-
-  function bookingsAt(iso: string, band: string): Booking[] {
-    return allBookings.filter((b) => b.date === iso && `${b.startTime}-${b.endTime}` === band);
+  // Does a booking cover this hour row? (for placing a card so it visually
+  // spans from its start through its end)
+  function bookingCovering(iso: string, hourStart: string): Booking | undefined {
+    return allBookings.find((b) => {
+      if (b.date !== iso) return false;
+      const bStart = toMin(b.startTime);
+      const h = toMin(hourStart);
+      // The card "anchors" on the row equal to its start time.
+      return h === bStart;
+    });
+  }
+  // How many hour-rows does a booking span? (for the card height)
+  function spanRows(b: Booking): number {
+    return Math.max(1, Math.round((toMin(b.endTime) - toMin(b.startTime)) / 60));
   }
 
+  const renderGrid = (wIdx: number) => {
+    const wWeek = weeks[wIdx] ?? [];
+    const wColumns = weekColumns(wWeek);
+
+    return (
+      <div className="grid gap-1" style={{ gridTemplateColumns: `48px repeat(7, minmax(0, 1fr))` }}>
+        {/* Header row: corner + day columns */}
+        <div />
+        {wColumns.map((col, i) => {
+          const isToday = col?.iso === nowIso;
+          return (
+            <div key={i} className="text-center pb-2 select-none">
+              {col ? (
+                <>
+                  <p
+                    className="text-[10px] font-semibold uppercase tracking-wider"
+                    style={{ color: isToday ? 'var(--accent-2)' : 'var(--tx-3)' }}
+                  >
+                    {col.dayName}
+                  </p>
+                  <p
+                    className="text-xs font-bold mt-0.5 inline-flex items-center justify-center min-w-[24px] h-6 rounded-lg px-1.5"
+                    style={{
+                      color: isToday ? 'var(--accent-fg)' : 'var(--tx)',
+                      background: isToday ? 'var(--accent)' : 'transparent',
+                    }}
+                  >
+                    {col.iso.split('-')[2]}
+                  </p>
+                </>
+              ) : (
+                <p className="text-[10px] pt-2" style={{ color: 'var(--tx-3)', opacity: 0.4 }}>
+                  {i === 0 ? 'Sun' : 'Sat'}
+                </p>
+              )}
+            </div>
+          );
+        })}
+
+        {/* Body: one row per hour */}
+        {HOURS.map((hour) => (
+          <RowFragment key={hour}>
+            {/* Hour label */}
+            <div className="flex items-start justify-end pr-2 pt-1.5 select-none">
+              <span className="text-[10px] font-medium" style={{ color: 'var(--tx-3)' }}>
+                {hour}
+              </span>
+            </div>
+
+            {wColumns.map((col, ci) => {
+              if (!col) return <WeekendCell key={ci} />;
+
+              const isToday = col.iso === nowIso;
+              const booking = bookingCovering(col.iso, hour);
+
+              // No class anchored here → clean hollow empty cell (free time).
+              if (!booking) return <EmptyCell key={ci} isToday={isToday} />;
+
+              const ec = courseBySectionId.get(booking.sectionId)!;
+              const span = spanRows(booking);
+              const inSession =
+                isToday && nowMin >= toMin(booking.startTime) && nowMin < toMin(booking.endTime);
+
+              return (
+                <TimetableCard
+                  key={booking.id}
+                  booking={booking}
+                  ec={ec}
+                  shade={shadeForTime(booking.startTime)}
+                  span={span}
+                  isExpanded={expandedId === booking.id}
+                  isToday={isToday}
+                  inSession={inSession}
+                  onToggle={() => setExpandedId(expandedId === booking.id ? null : booking.id)}
+                  matchesFilter={activeFilter === 'all' || booking.type === activeFilter}
+                />
+              );
+            })}
+          </RowFragment>
+        ))}
+      </div>
+    );
+  };
+
   return (
-    <section className="card-premium p-4 sm:p-5 animate-fade-in">
-      {/* Header: week switcher */}
-      <div className="flex items-center justify-between mb-4">
+    <section
+      id="schedule"
+      className="card-premium p-4 sm:p-6 scroll-mt-20 animate-fade-in"
+    >
+      {/* Subtle Segmented Filter Controls */}
+      <div className="flex items-center justify-between mb-4 pb-4 border-b border-[var(--border)]">
+        <span className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
+          Filter View
+        </span>
+        <div 
+          className="flex items-center gap-1 rounded-xl p-1" 
+          style={{ background: 'var(--subtle)', border: '1px solid var(--border)' }}
+        >
+          {(['all', 'lecture', 'lab'] as const).map((filterOpt) => (
+            <button
+              key={filterOpt}
+              onClick={() => setActiveFilter(filterOpt)}
+              className="px-3 py-1 rounded-lg text-xs font-semibold transition-all duration-300 ease-in-out cursor-pointer border-none"
+              style={{
+                background: activeFilter === filterOpt ? 'var(--accent)' : 'transparent',
+                color: activeFilter === filterOpt ? 'var(--accent-fg)' : 'var(--tx-2)',
+              }}
+            >
+              {filterOpt === 'all' ? 'All' : filterOpt === 'lecture' ? 'Lectures Only' : 'Labs Only'}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Header */}
+      <div className="flex items-center justify-between mb-5">
         <div>
           <h2 className="text-lg font-bold" style={{ color: 'var(--tx)' }}>Timetable</h2>
-          <p className="text-xs" style={{ color: 'var(--tx-2)' }}>
-            Week {weekIdx + 1} of {weeks.length} · tap a card for details
+          <p className="text-xs mt-0.5" style={{ color: 'var(--tx-2)' }}>
+            Week {weekIdx + 1} of {weeks.length} · Mon–Fri · empty cells = free time
           </p>
         </div>
-        <div className="flex items-center gap-1 rounded-lg p-1" style={{ background: 'var(--subtle)', border: '1px solid var(--border)' }}>
+        {/* Week toggle — orange fill ONLY on active button */}
+        <div className="flex items-center gap-1 rounded-xl p-1" style={{ background: 'var(--subtle)', border: '1px solid var(--border)' }}>
           {weeks.map((_, i) => (
             <button
               key={i}
               onClick={() => setWeekIdx(i)}
-              className="px-3 py-1 rounded-md text-xs font-medium transition-colors"
+              className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
               style={{
                 background: weekIdx === i ? 'var(--accent)' : 'transparent',
                 color: weekIdx === i ? 'var(--accent-fg)' : 'var(--tx-2)',
@@ -103,191 +221,196 @@ export default function TimetableGrid({ data }: Props) {
         </div>
       </div>
 
-      {/* Grid: header row (Sun..Sat) */}
-      <div className="grid gap-1.5" style={{ gridTemplateColumns: `60px repeat(7, minmax(0, 1fr))` }}>
-        <div /> {/* corner */}
-        {columns.map((col, i) => (
-          <div key={i} className="text-center py-1.5">
-            {col ? (
-              <button
-                onClick={() => setSelectedDate(selectedDate === col.iso ? null : col.iso)}
-                className="w-full"
-                style={{ background: 'none', border: 'none', cursor: 'pointer' }}
-              >
-                <p className="text-[10px] font-semibold uppercase tracking-wide" style={{ color: 'var(--accent-2)' }}>
-                  {col.dayName}
-                </p>
-                <p className="text-xs font-medium" style={{ color: 'var(--tx)' }}>
-                  {col.iso.split('-')[2]}
-                </p>
-              </button>
-            ) : (
-              <p className="text-[10px]" style={{ color: 'var(--tx-3)' }}>—</p>
-            )}
-          </div>
-        ))}
-
-        {/* Rows: one per time band */}
-        {rowBands.length === 0 && (
-          <div className="col-span-full py-8 text-center text-sm" style={{ color: 'var(--tx-2)' }}>
-            No sessions scheduled this week.
-          </div>
-        )}
-
-        {rowBands.map((band) => {
-          const [start, end] = band.split('-');
-          return (
-            <FragmentRow key={band}>
-              {/* Time label */}
-              <div className="flex items-start justify-end pr-1 pt-1.5">
-                <span className="text-[10px] font-medium text-right" style={{ color: 'var(--tx-3)' }}>
-                  {start}
-                </span>
-              </div>
-              {columns.map((col, ci) => {
-                if (!col) return <WeekendCell key={ci} />;
-                const cellBookings = bookingsAt(col.iso, band);
-                if (cellBookings.length === 0) return <EmptyCell key={ci} selected={selectedDate === col.iso} />;
-                return cellBookings.map((b) => {
-                  const ec = courseBySectionId.get(b.sectionId)!;
-                  const shade = shadeFor(ec.course.id);
-                  const isHovered = hoveredCourseId === ec.course.id;
-                  const isExpanded = expandedId === b.id;
-                  return (
-                    <TimetableCard
-                      key={b.id}
-                      booking={b}
-                      ec={ec}
-                      shade={shade}
-                      isHovered={isHovered}
-                      isExpanded={isExpanded}
-                      onHover={setHoveredCourseId}
-                      onToggle={() => setExpandedId(expandedId === b.id ? null : b.id)}
-                    />
-                  );
-                });
-              })}
-            </FragmentRow>
-          );
-        })}
+      {/* Week slider container with horizontal slide transition */}
+      <div className="overflow-hidden w-full relative">
+        <div
+          className="flex transition-transform duration-300 ease-in-out"
+          style={{
+            width: `${weeks.length * 100}%`,
+            transform: `translateX(-${weekIdx * (100 / weeks.length)}%)`,
+          }}
+        >
+          {weeks.map((_, i) => (
+            <div
+              key={i}
+              className="shrink-0 transition-opacity duration-300 ease-in-out"
+              style={{
+                width: `${100 / weeks.length}%`,
+                opacity: weekIdx === i ? 1 : 0.4,
+              }}
+            >
+              {renderGrid(i)}
+            </div>
+          ))}
+        </div>
       </div>
 
-      {/* Legend */}
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-4 text-[11px]" style={{ color: 'var(--tx-2)' }}>
-        <LegendDot color="var(--accent)" label="Block session" />
-        <LegendDot color="var(--border)" label="Available slot" hollow />
-        <LegendDot color="var(--accent-2)" label="Admin override" pulse />
-      </div>
     </section>
   );
 }
 
-/** A single timetable cell card. */
+// ────────────────────────────────────────────────────────────────────────────
+// Sub-components
+// ────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Course card. Orange appears ONLY as a solid fill here. The in-session card
+ * gets `.block-now` (full solid orange); others use a softer translucent fill.
+ * Card height scales with its time span (90-min class → 2 hour-rows tall).
+ */
 function TimetableCard({
   booking,
   ec,
   shade,
-  isHovered,
+  span,
   isExpanded,
-  onHover,
+  isToday,
+  inSession,
   onToggle,
+  matchesFilter,
 }: {
   booking: Booking;
   ec: EnrolledCourse;
-  shade: { bg: string; border: string; text: string };
-  isHovered: boolean;
+  shade: { bg: string; text: string };
+  span: number;
   isExpanded: boolean;
-  onHover: (id: number | null) => void;
+  isToday: boolean;
+  inSession: boolean;
   onToggle: () => void;
+  matchesFilter: boolean;
 }) {
   const isOverride = !!booking.adminOverride;
+  const fill = shade.bg;
+
   return (
     <div
       onClick={onToggle}
-      onMouseEnter={() => onHover(ec.course.id)}
-      onMouseLeave={() => onHover(null)}
       className={[
-        'rounded-md p-1.5 cursor-pointer transition-all duration-150 select-none',
-        isHovered ? 'block-glow' : '',
+        'rounded-xl p-2.5 cursor-pointer transition-all duration-300 ease-in-out select-none',
+        'hover:-translate-y-1',
+        'border',
+        'hover:shadow-md hover:shadow-orange-500/[0.06]',
+        inSession || isOverride
+          ? 'border-[var(--accent)]'
+          : 'border-[var(--border)] hover:border-[#FF7A1A]/50 dark:hover:border-[#FF6B00]/60',
         isOverride ? 'block-override' : '',
+        inSession ? 'block-now ring-2 ring-orange-400/50 animate-pulse' : '',
+        matchesFilter ? 'opacity-100 scale-100' : 'opacity-30 scale-[0.98] pointer-events-none',
       ].join(' ')}
       style={{
-        background: isOverride ? 'rgba(245,132,31,0.24)' : shade.bg,
-        border: `1px solid ${isOverride ? 'var(--accent)' : shade.border}`,
-        minHeight: 44,
+        background: fill,
+        // Span multiple hour-rows: each row ~ 56px + 4px gap.
+        minHeight: span * 56 + (span - 1) * 4,
+        boxShadow: 'inset 0 0 0 1px rgba(0,0,0,0.05)',
       }}
       title={`${ec.course.courseName} · ${timeBand(booking.startTime, booking.endTime)}`}
     >
-      <p className="text-[10px] font-bold truncate" style={{ color: shade.text }}>
-        {ec.course.courseCode}
+      <div className="flex items-start justify-between gap-1 mb-1.5">
+        {/* Primary: The Course Code (e.g., CS101) must be the most prominent element—bold and crisp white (text-white) */}
+        <span className="block-now__code text-sm font-bold tracking-tight text-white drop-shadow-sm">
+          {ec.course.courseCode}
+        </span>
+        {inSession && (
+          <span className="text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded bg-white/25 text-[#FFF5EB] shrink-0 border border-white/20">
+            Now
+          </span>
+        )}
+      </div>
+      
+      {/* Secondary: The Course Title should be slightly smaller in font size with a very high opacity (text-white/90) */}
+      <p className="block-now__name text-[11px] font-semibold leading-snug text-white/90 drop-shadow-sm">
+        {ec.course.courseName}
       </p>
-      <p className="text-[9px] truncate" style={{ color: 'var(--tx-2)' }}>
-        {booking.startTime}
+      
+      {/* Tertiary: Time Slots must be rendered in a smaller, lighter font weight with lowered opacity (text-white/70) */}
+      <p className="block-now__time text-[9px] font-light mt-1.5 text-white/70 drop-shadow-sm">
+        {booking.startTime}–{booking.endTime}
       </p>
 
-      {/* Expanded inline detail */}
+      {/* Expand panel */}
       <div
         className="expand-panel"
         style={{
-          maxHeight: isExpanded ? 100 : 0,
+          maxHeight: isExpanded ? 120 : 0,
           opacity: isExpanded ? 1 : 0,
-          marginTop: isExpanded ? 6 : 0,
+          marginTop: isExpanded ? 8 : 0,
         }}
       >
-        <div className="pt-1.5 space-y-0.5" style={{ borderTop: `1px solid ${shade.border}` }}>
-          <p className="text-[9px]" style={{ color: 'var(--tx-2)' }}>
-            {ec.section.instructorName ?? 'TBA'}
-          </p>
-          <p className="text-[9px]" style={{ color: 'var(--tx-2)' }}>
-            {booking.room ?? ec.section.room ?? 'TBA'}
-          </p>
+        <div className="pt-2 space-y-1" style={{ borderTop: '1px solid rgba(255,255,255,0.25)' }}>
+          {/* Tertiary: Supporting Room Numbers and Instructor rendered in a smaller, lighter font weight with lowered opacity (text-white/70) */}
+          <DetailRow label="Room" value={booking.room ?? ec.section.room ?? 'TBA'} />
+          <DetailRow label="Instructor" value={ec.section.instructorName ?? 'TBA'} />
         </div>
       </div>
     </div>
   );
 }
 
-/** Row fragment that renders its children inline in the CSS grid. */
-function FragmentRow({ children }: { children: React.ReactNode }) {
-  // React fragments don't accept a style/gridColumn, but our grid is set on the
-  // parent with the column template; children just lay out in source order.
+function DetailRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center justify-between gap-2">
+      <span className="text-[10px] font-light text-white/70">{label}</span>
+      <span className="text-[10px] font-light text-right truncate drop-shadow-sm text-white/70">{value}</span>
+    </div>
+  );
+}
+
+/** Row of grid cells laid out inline (time label + 7 day cells). */
+function RowFragment({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+/** Weekend — ultra-faint, clearly not a teaching day. */
 function WeekendCell() {
   return (
     <div
-      className="rounded-md flex items-center justify-center"
-      style={{ background: 'var(--subtle)', border: '1px dashed var(--border)', minHeight: 44 }}
-    >
-      <span className="text-[9px]" style={{ color: 'var(--tx-3)' }}>wknd</span>
-    </div>
-  );
-}
-
-function EmptyCell({ selected }: { selected: boolean }) {
-  return (
-    <div
-      className="rounded-md flex items-center justify-center"
+      className="rounded-xl flex items-center justify-center"
       style={{
-        background: selected ? 'rgba(245,132,31,0.05)' : 'var(--subtle)',
-        border: `1px dashed ${selected ? 'rgba(245,132,31,0.3)' : 'var(--border)'}`,
-        minHeight: 44,
+        background: 'var(--empty-cell-bg)',
+        border: '1px solid var(--empty-cell-border)',
+        minHeight: 52,
       }}
     >
-      <span className="text-[9px]" style={{ color: 'var(--tx-3)' }}>·</span>
+      <span className="text-[9px]" style={{ color: 'var(--tx-3)', opacity: 0.35 }}>—</span>
     </div>
   );
 }
 
-function LegendDot({ color, label, hollow, pulse }: { color: string; label: string; hollow?: boolean; pulse?: boolean }) {
+/** Empty cell — clean hollow free-time placeholder. Transitioning container with dash / Free + icons cross-fading */
+function EmptyCell({ isToday }: { isToday: boolean }) {
   return (
-    <span className="inline-flex items-center gap-1.5">
-      <span
-        className={['inline-block w-2.5 h-2.5 rounded-sm', pulse ? 'block-override' : ''].join(' ')}
-        style={{ background: hollow ? 'transparent' : color, border: `1px solid ${color}` }}
-      />
-      {label}
-    </span>
+    <div
+      className="rounded-xl transition-all duration-300 ease-in-out cursor-pointer flex items-center justify-center group relative min-h-[52px] hover:bg-orange-500/[0.04] dark:hover:bg-orange-500/[0.03] hover:border-[#FF6B00]/30 dark:hover:border-[#FF6B00]/20"
+      style={{
+        borderWidth: '1px',
+        borderStyle: 'solid',
+        borderColor: isToday ? 'var(--empty-cell-border-today)' : 'var(--empty-cell-border)',
+      }}
+    >
+      {/* Simple dash showing when not hovered, fades out on hover */}
+      <span className="absolute text-[9px] text-zinc-300 dark:text-zinc-700 opacity-100 group-hover:opacity-0 transition-opacity duration-300 ease-in-out select-none">
+        —
+      </span>
+
+      {/* Subtle indicator that fades in on hover */}
+      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ease-in-out select-none">
+        <svg className="w-3 h-3 text-[#FF6B00] dark:text-[#FF944D]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+        </svg>
+        <span className="text-[9px] font-bold text-[#FF6B00] dark:text-[#FF944D] tracking-wider uppercase">
+          Free
+        </span>
+      </div>
+    </div>
   );
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+function toMin(hhmm: string): number {
+  const [h, m] = hhmm.split(':').map(Number);
+  return h * 60 + m;
+}
+function minutesNow(): number {
+  const d = new Date();
+  return d.getHours() * 60 + d.getMinutes();
 }

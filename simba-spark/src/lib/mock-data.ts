@@ -32,7 +32,7 @@ const users: User[] = [
     msOid: '9a7c2f1e-4b3d-4c8a-9e6f-7d2b1a0c3e4f',
     msVerified: true,
     // Nostalgic profile summary fields (sidebar top block).
-    studentId: '6401-2345',
+    studentId: '6401234',
     gpa: 3.65,
     department: 'School of Information Technology',
   },
@@ -84,14 +84,14 @@ const timeframes: Timeframe[] = [
   {
     id: 1,
     label: 'Block 1 — 2026',
-    startDate: '2026-06-15',
-    endDate: '2026-06-26',
+    startDate: '2026-06-22',
+    endDate: '2026-07-03',
   },
   {
     id: 2,
     label: 'Block 2 — 2026',
-    startDate: '2026-06-29',
-    endDate: '2026-07-10',
+    startDate: '2026-07-06',
+    endDate: '2026-07-17',
   },
 ];
 
@@ -150,6 +150,7 @@ function buildBlock(
   startTime: string,
   endTime: string,
   overrideDates: string[] = [],
+  type: 'lecture' | 'lab' = 'lecture',
 ): Booking[] {
   return weekdaysInRange(timeframe.startDate, timeframe.endDate).map((date, i) => ({
     id: sectionId * 100 + i,
@@ -159,6 +160,7 @@ function buildBlock(
     endTime,
     room,
     adminOverride: overrideDates.includes(date),
+    type,
   }));
 }
 
@@ -167,12 +169,12 @@ const block1 = timeframes[0];
 const bookings: Booking[] = [
   // CS101 — daily 09:00–10:30 in A72. One admin override (Mon 22 Jun) to demo
   // the pulse interaction.
-  ...buildBlock(1, 'Room A72', block1, '09:00', '10:30', ['2026-06-22']),
+  ...buildBlock(1, 'Room A72', block1, '09:00', '10:30', ['2026-06-22'], 'lecture'),
   // MA101 — daily 11:00–12:30 in B10.
-  ...buildBlock(2, 'Room B10', block1, '11:00', '12:30'),
+  ...buildBlock(2, 'Room B10', block1, '11:00', '12:30', [], 'lecture'),
   // EN101 — daily 14:00–15:30 in C05 (afternoons, 3 days/week rhythm is
   // possible later; for the 10-day demo we keep it daily).
-  ...buildBlock(3, 'Room C05', block1, '14:00', '15:30'),
+  ...buildBlock(3, 'Room C05', block1, '14:00', '15:30', [], 'lab'),
 ];
 
 // ---------------------------------------------------------------------------

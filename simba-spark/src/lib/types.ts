@@ -93,6 +93,7 @@ export interface Booking {
    * calls for these to "animate with a subtle pulse effect".
    */
   adminOverride?: boolean;
+  type?: 'lecture' | 'lab';
 }
 
 /** A real-time message shown in the Notification Feed. */

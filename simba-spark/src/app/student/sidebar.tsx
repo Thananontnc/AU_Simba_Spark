@@ -57,10 +57,10 @@ export default function StudentSidebar({ data }: Props) {
   const sidebarContent = (
     <aside
       className="w-64 shrink-0 flex flex-col h-full overflow-y-auto"
-      style={{ background: 'var(--sidebar)', borderRight: '1px solid rgba(255,255,255,0.06)' }}
+      style={{ background: 'var(--sidebar)', borderRight: '1px solid var(--border)' }}
     >
       {/* ---------- Profile summary block (top) ---------- */}
-      <div className="p-5 flex flex-col items-center text-center" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+      <div className="p-5 flex flex-col items-center text-center" style={{ borderBottom: '1px solid var(--border)' }}>
         {/* Avatar (initials fallback) */}
         <div
           className="w-16 h-16 rounded-full flex items-center justify-center text-xl font-bold mb-3"
@@ -72,15 +72,15 @@ export default function StudentSidebar({ data }: Props) {
         >
           {initials}
         </div>
-        <p className="text-sm font-semibold text-white leading-tight">{student.fullName}</p>
-        <p className="text-[10px] mt-1" style={{ color: 'rgba(255,255,255,0.4)' }}>
+        <p className="text-sm font-semibold leading-tight" style={{ color: 'var(--tx)' }}>{student.fullName}</p>
+        <p className="text-[10px] mt-1" style={{ color: 'var(--tx-3)' }}>
           {student.department}
         </p>
 
         {/* Student ID */}
-        <div className="mt-3 w-full flex items-center justify-between px-3 py-1.5 rounded-md" style={{ background: 'rgba(255,255,255,0.04)' }}>
-          <span className="text-[10px]" style={{ color: 'rgba(255,255,255,0.4)' }}>Student ID</span>
-          <span className="text-xs font-medium text-white">{student.studentId ?? '—'}</span>
+        <div className="mt-3 w-full flex items-center justify-between px-3 py-1.5 rounded-md" style={{ background: 'var(--subtle)' }}>
+          <span className="text-[10px]" style={{ color: 'var(--tx-3)' }}>Student ID</span>
+          <span className="text-xs font-medium" style={{ color: 'var(--tx)' }}>{student.studentId ?? '—'}</span>
         </div>
 
         {/* GPA + Credits stats — count up on load */}
@@ -94,7 +94,7 @@ export default function StudentSidebar({ data }: Props) {
       <nav className="flex-1 px-3 py-4 space-y-5">
         {NAV_GROUPS.map((group) => (
           <div key={group.heading}>
-            <p className="px-3 mb-1.5 text-[10px] font-semibold uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.3)' }}>
+            <p className="px-3 mb-1.5 text-[10px] font-semibold uppercase tracking-wider" style={{ color: 'var(--tx-3)' }}>
               {group.heading}
             </p>
             {group.items.map((item) => {
@@ -120,24 +120,24 @@ export default function StudentSidebar({ data }: Props) {
                     textDecoration: 'none',
                     // Soft orange active highlight (replaces original dull purple)
                     background: isActive ? 'rgba(245,132,31,0.16)' : 'transparent',
-                    color: isActive ? 'var(--accent-2)' : 'rgba(255,255,255,0.55)',
+                    color: isActive ? 'var(--accent-2)' : 'var(--tx-2)',
                     fontWeight: isActive ? 600 : 400,
                     transition: 'background 0.15s, color 0.15s',
                   }}
                   onMouseEnter={(e) => {
                     if (!isActive) {
-                      e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
-                      e.currentTarget.style.color = 'rgba(255,255,255,0.85)';
+                      e.currentTarget.style.background = 'var(--subtle)';
+                      e.currentTarget.style.color = 'var(--tx)';
                     }
                   }}
                   onMouseLeave={(e) => {
                     if (!isActive) {
                       e.currentTarget.style.background = 'transparent';
-                      e.currentTarget.style.color = 'rgba(255,255,255,0.55)';
+                      e.currentTarget.style.color = 'var(--tx-2)';
                     }
                   }}
                 >
-                  <span style={{ color: isActive ? 'var(--accent-2)' : 'rgba(255,255,255,0.35)' }}>
+                  <span style={{ color: isActive ? 'var(--accent-2)' : 'var(--tx-3)' }}>
                     {item.icon}
                   </span>
                   {item.label}
@@ -160,7 +160,7 @@ export default function StudentSidebar({ data }: Props) {
       </nav>
 
       {/* Sign out */}
-      <div className="px-3 py-3" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+      <div className="px-3 py-3" style={{ borderTop: '1px solid var(--border)' }}>
         <Link href="/login" className="sidebar-signout">
           <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
             <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
@@ -200,8 +200,8 @@ export default function StudentSidebar({ data }: Props) {
         className="fixed top-3 left-4 z-50 lg:hidden flex items-center justify-center w-8 h-8 rounded-lg"
         style={{
           background: 'var(--sidebar)',
-          color: 'rgba(255,255,255,0.7)',
-          border: '1px solid rgba(255,255,255,0.08)',
+          color: 'var(--tx)',
+          border: '1px solid var(--border)',
         }}
         onClick={() => setOpen((v) => !v)}
         aria-label="Toggle menu"
@@ -237,8 +237,8 @@ function ProfileStat({ label, value, decimals }: { label: string; value: number;
     return () => cancelAnimationFrame(raf);
   }, [value]);
   return (
-    <div className="rounded-md py-2 px-1" style={{ background: 'rgba(255,255,255,0.04)' }}>
-      <p className="text-[10px]" style={{ color: 'rgba(255,255,255,0.4)' }}>
+    <div className="rounded-md py-2 px-1" style={{ background: 'var(--subtle)' }}>
+      <p className="text-[10px]" style={{ color: 'var(--tx-3)' }}>
         {label}
       </p>
       <p className="text-lg font-bold" style={{ color: 'var(--accent-2)' }}>

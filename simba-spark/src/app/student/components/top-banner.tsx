@@ -1,5 +1,5 @@
 import type { StudentDashboardData } from '@/lib/types';
-import { monthLabel } from '@/lib/date-utils';
+import { monthLabel, weekdaysInRange } from '@/lib/date-utils';
 
 type Props = { data: StudentDashboardData };
 
@@ -10,6 +10,9 @@ type Props = { data: StudentDashboardData };
  * so white text sits cleanly on top. Shows the active class/block label plus a
  * quick block-progress strip (like the original "CLASS 1/2026" header, elevated).
  *
+ * Counts TEACHING DAYS (weekdays only), not calendar days — a Simba block is
+ * 10 teaching days, not 12 calendar days.
+ *
  * Server Component — no interactivity needed.
  */
 export default function TopBanner({ data }: Props) {
@@ -19,26 +22,31 @@ export default function TopBanner({ data }: Props) {
     ? `CLASS ${currentBlock.label.split('—')[0].replace(/\D/g, '')}/${new Date(currentBlock.startDate).getFullYear()}`
     : 'CLASS —';
 
-  // Block progress for the thin strip under the title.
+  // Teaching-day count + progress (weekdays only, matching the actual schedule).
   let pct = 0;
   let dayLabel = '';
   if (currentBlock) {
-    const start = new Date(currentBlock.startDate + 'T00:00:00').getTime();
-    const end = new Date(currentBlock.endDate + 'T00:00:00').getTime();
-    const now = Date.now();
-    pct = Math.max(0, Math.min(100, Math.round(((now - start) / (end - start)) * 100)));
-    const totalDays = Math.round((end - start) / 86_400_000) + 1;
-    const elapsed = Math.max(0, Math.min(totalDays, Math.round((now - start) / 86_400_000) + 1));
-    dayLabel = `Day ${elapsed} of ${totalDays}`;
+    const teachingDays = weekdaysInRange(currentBlock.startDate, currentBlock.endDate); // e.g. 10 weekdays
+    const todayIso = new Date().toISOString().slice(0, 10);
+
+    // How many teaching days have elapsed (including today if it's a teaching day)?
+    const elapsedCount = teachingDays.filter((iso) => iso <= todayIso).length;
+    const total = teachingDays.length;
+    // Progress = teaching days elapsed / total teaching days.
+    pct = total > 0 ? Math.round((elapsedCount / total) * 100) : 0;
+    // Clamp: if we're before the block, 0%; after, 100%.
+    if (todayIso < currentBlock.startDate) pct = 0;
+    if (todayIso > currentBlock.endDate) pct = 100;
+    dayLabel = `Day ${Math.min(elapsedCount || (todayIso < currentBlock.startDate ? 0 : 1), total)} of ${total}`;
   }
 
   return (
-    <section className="relative overflow-hidden rounded-2xl h-44 sm:h-52 animate-fade-in">
+    <section className="relative overflow-hidden rounded-3xl h-44 sm:h-52 animate-fade-in bg-[#161513] border border-zinc-800/40 shadow-lg">
       {/* Landscape image layer — uses a campus-style stock photo from Unsplash
           source. Swap for a real AU campus photo later. */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src="https://images.unsplash.com/photo-1562774053-701939374585?auto=format&fit=crop&w=1600&q=80"
+        src="https://upload.wikimedia.org/wikipedia/commons/3/31/Assumption_University.jpg"
         alt="Campus"
         className="absolute inset-0 w-full h-full object-cover"
       />
