@@ -18,7 +18,7 @@ export default function StudentPage() {
     // Simba Spark features only):
     //   Sidebar (in layout) → Central grid → Right widget panel
     // Collapses gracefully on smaller screens.
-    <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_340px] gap-6">
+    <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_400px] gap-6">
       {/* ---------- CENTER COLUMN ---------- */}
       <div className="space-y-6 min-w-0">
         {/* #overview anchor — banner sits at the top, acts as the hero */}

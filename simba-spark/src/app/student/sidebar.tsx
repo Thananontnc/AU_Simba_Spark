@@ -49,15 +49,10 @@ export default function StudentSidebar({ data }: Props) {
     return () => window.removeEventListener('keydown', handler);
   }, []);
 
-  const initials = student.fullName
-    .split(' ')
-    .map((p) => p[0])
-    .slice(0, 2)
-    .join('');
 
   const sidebarContent = (
     <aside
-      className="w-64 shrink-0 flex flex-col h-full overflow-y-auto"
+      className="w-80 shrink-0 flex flex-col h-full overflow-y-auto"
       style={{ background: 'var(--sidebar)', borderRight: '1px solid var(--border)' }}
     >
       {/* ---------- Brand Logo & App Name ---------- */}
@@ -87,33 +82,67 @@ export default function StudentSidebar({ data }: Props) {
       </button>
 
       {/* ---------- Profile summary block (top) ---------- */}
-      <div className="p-5 flex flex-col items-center text-center" style={{ borderBottom: '1px solid var(--border)' }}>
-        {/* Avatar (initials fallback) */}
-        <div
-          className="w-16 h-16 rounded-full flex items-center justify-center text-xl font-bold mb-3"
-          style={{
-            background: 'linear-gradient(135deg, var(--accent), var(--accent-2))',
-            color: 'var(--accent-fg)',
-            boxShadow: '0 4px 14px rgba(245,132,31,0.35)',
-          }}
-        >
-          {initials}
-        </div>
-        <p className="text-sm font-semibold leading-tight" style={{ color: 'var(--tx)' }}>{student.fullName}</p>
-        <p className="text-[10px] mt-1" style={{ color: 'var(--tx-3)' }}>
-          {student.department}
-        </p>
-
-        {/* Student ID */}
-        <div className="mt-3 w-full flex items-center justify-between px-3 py-1.5 rounded-md" style={{ background: 'var(--subtle)' }}>
-          <span className="text-[10px]" style={{ color: 'var(--tx-3)' }}>Student ID</span>
-          <span className="text-xs font-medium" style={{ color: 'var(--tx)' }}>{student.studentId ?? '—'}</span>
+      <div className="p-5 flex flex-col items-start w-full" style={{ borderBottom: '1px solid var(--border)' }}>
+        {/* Row 1: Avatar + Names */}
+        <div className="flex items-center gap-4 w-full">
+          {/* Avatar (with beautiful human silhouette SVG) */}
+          <div className="w-14 h-14 rounded-full bg-[#E5E7EB] dark:bg-zinc-800 flex items-center justify-center shrink-0 overflow-hidden">
+            <svg className="w-10 h-10 text-white mt-1.5" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+            </svg>
+          </div>
+          {/* Names */}
+          <div className="min-w-0">
+            <h2 className="text-[17px] font-bold tracking-tight text-zinc-800 dark:text-zinc-100 uppercase leading-none truncate">
+              {student.fullName.split(' ')[0]}
+            </h2>
+            <p className="text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide leading-none mt-1 truncate">
+              {student.fullName.split(' ').slice(1).join(' ')}
+            </p>
+          </div>
         </div>
 
-        {/* GPA + Credits stats — count up on load */}
-        <div className="mt-2 grid grid-cols-2 gap-2 w-full">
-          <ProfileStat label="GPA" value={student.gpa ?? 0} decimals={2} />
-          <ProfileStat label="Credits" value={totalCredits} decimals={0} />
+        {/* Row 2: Rounded info box (Shield + Department/Faculty) */}
+        <div className="w-full bg-[#f3f4f6] dark:bg-zinc-800/60 rounded-xl p-3.5 flex items-center gap-3 mt-4">
+          <svg className="w-8 h-8 text-zinc-300 dark:text-zinc-600 shrink-0" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M12 2L4 5v6.09c0 5.05 3.41 9.76 8 10.91 4.59-1.15 8-5.86 8-10.91V5l-8-3z" />
+          </svg>
+          <div className="min-w-0 flex-1">
+            <p className="text-[10px] font-bold text-zinc-700 dark:text-zinc-200 uppercase tracking-wide truncate">
+              {student.department}
+            </p>
+            <p className="text-[8px] font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider truncate mt-1">
+              {student.faculty ?? 'ENGINEERING, SCIENCE AND TECHNOLOGY'}
+            </p>
+          </div>
+        </div>
+
+        {/* Row 3: 3-column Stats */}
+        <div className="grid grid-cols-3 gap-2 w-full mt-5 text-center">
+          <div>
+            <p className="text-sm font-bold text-[#18181b] dark:text-zinc-100">
+              {student.studentId ?? '—'}
+            </p>
+            <p className="text-[8px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mt-1">
+              STUDENT ID
+            </p>
+          </div>
+          <div>
+            <p className="text-sm font-bold text-[#18181b] dark:text-zinc-100">
+              {student.gpa != null ? student.gpa.toFixed(2) : '0.00'}
+            </p>
+            <p className="text-[8px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mt-1">
+              G.P.A.
+            </p>
+          </div>
+          <div>
+            <p className="text-sm font-bold text-[#18181b] dark:text-zinc-100">
+              {student.credits ?? totalCredits}
+            </p>
+            <p className="text-[8px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mt-1">
+              CREDIT
+            </p>
+          </div>
         </div>
       </div>
 
@@ -121,7 +150,7 @@ export default function StudentSidebar({ data }: Props) {
       <nav className="flex-1 px-3 py-4 space-y-5">
         {NAV_GROUPS.map((group) => (
           <div key={group.heading}>
-            <p className="px-3 mb-1.5 text-[10px] font-semibold uppercase tracking-wider" style={{ color: 'var(--tx-3)' }}>
+            <p className="px-3 mb-1.5 text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--tx-3)' }}>
               {group.heading}
             </p>
             {group.items.map((item) => {
@@ -138,16 +167,16 @@ export default function StudentSidebar({ data }: Props) {
                   style={{
                     display: 'flex',
                     alignItems: 'center',
-                    gap: 10,
-                    padding: '9px 12px',
+                    gap: 12,
+                    padding: '10px 14px',
                     borderRadius: 8,
-                    fontSize: 13,
+                    fontSize: 15,
                     marginBottom: 2,
                     cursor: 'pointer',
                     textDecoration: 'none',
-                    // Soft orange active highlight (replaces original dull purple)
-                    background: isActive ? 'rgba(245,132,31,0.16)' : 'transparent',
-                    color: isActive ? 'var(--accent-2)' : 'var(--tx-2)',
+                    // Soft Orange active highlight
+                    background: isActive ? 'rgba(255,107,0,0.1)' : 'transparent',
+                    color: isActive ? 'var(--accent)' : 'var(--tx-2)',
                     fontWeight: isActive ? 600 : 400,
                     transition: 'background 0.15s, color 0.15s',
                   }}
@@ -275,8 +304,8 @@ function ProfileStat({ label, value, decimals }: { label: string; value: number;
   );
 }
 
-// ---------- Inline SVG icons (15px, currentColor) ----------
-const S = { width: 15, height: 15, fill: 'none', stroke: 'currentColor', strokeWidth: 1.8, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const, viewBox: '0 0 24 24' };
+// ---------- Inline SVG icons (18px, currentColor) ----------
+const S = { width: 18, height: 18, fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const, viewBox: '0 0 24 24' };
 function IconHome() { return <svg {...S}><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg>; }
 function IconUser() { return <svg {...S}><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>; }
 function IconClass() { return <svg {...S}><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" /><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" /></svg>; }

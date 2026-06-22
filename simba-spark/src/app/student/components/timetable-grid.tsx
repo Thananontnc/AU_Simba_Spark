@@ -160,10 +160,10 @@ export default function TimetableGrid({ data }: Props) {
             <RowFragment key={hour}>
               {/* Hour label */}
               <div
-                className="flex items-start justify-end pr-2 pt-1.5 select-none"
+                className="flex items-start justify-end pr-2.5 pt-1.5 select-none"
                 style={{ gridColumn: 1, gridRow }}
               >
-                <span className="text-[10px] font-medium" style={{ color: 'var(--tx-3)' }}>
+                <span className="text-[11px] font-bold text-black dark:text-zinc-100">
                   {hour}
                 </span>
               </div>
@@ -379,62 +379,76 @@ function TimetableCard({
     <div
       onClick={onToggle}
       className={[
-        'rounded-xl p-2.5 cursor-pointer transition-all duration-300 ease-in-out select-none',
+        'rounded-xl p-3.5 cursor-pointer transition-all duration-300 ease-in-out select-none flex flex-col justify-between',
         'hover:-translate-y-1',
         'border',
-        'hover:shadow-md hover:shadow-orange-500/[0.06]',
         inSession || isOverride
           ? 'border-[var(--accent)]'
           : 'border-[var(--border)] hover:border-[#FF7A1A]/50 dark:hover:border-[#FF6B00]/60',
         isOverride ? 'block-override' : '',
-        inSession ? 'block-now ring-2 ring-orange-400/50 animate-pulse' : '',
+        inSession ? 'block-now ring-2 ring-orange-400/50' : '',
         isDimmed ? 'opacity-15 scale-[0.98] pointer-events-none blur-[0.5px]' : 'opacity-100 scale-100',
       ].join(' ')}
       style={{
-        background: fill,
+        background: `linear-gradient(135deg, rgba(255,255,255,0.15) 0%, rgba(0,0,0,0.2) 100%), ${fill}`,
         gridColumn: gridCol,
         gridRow: `${gridRow} / span ${span}`,
         // Span multiple hour-rows: each row ~ 56px + 4px gap.
         minHeight: span * 56 + (span - 1) * 4,
-        boxShadow: 'inset 0 0 0 1px rgba(0,0,0,0.05)',
+        boxShadow: '0 4px 12px rgba(0,0,0,0.12), inset 0 1px 1px rgba(255,255,255,0.25)',
       }}
       title={`${ec.course.courseName} · ${timeBand(booking.startTime, booking.endTime)}`}
     >
-      <div className="flex items-start justify-between gap-1 mb-1.5">
-        {/* Primary: The Course Code (e.g., CS101) must be the most prominent element—bold and crisp white (text-white) */}
-        <span className="block-now__code text-sm font-bold tracking-tight text-white drop-shadow-sm">
-          {ec.course.courseCode}
-        </span>
-        {inSession && (
-          <span className="text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded bg-white/25 text-[#FFF5EB] shrink-0 border border-white/20">
-            Now
+      <div className="w-full">
+        <div className="flex items-start justify-between gap-1 mb-1">
+          {/* Primary: The Course Code (e.g., CS101) must be the most prominent element—bold and crisp white */}
+          <span 
+            className="block-now__code text-sm font-extrabold tracking-wide text-white"
+            style={{ textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}
+          >
+            {ec.course.courseCode}
           </span>
-        )}
+          {inSession && (
+            <span className="text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded bg-white/35 text-white shrink-0 border border-white/20">
+              Now
+            </span>
+          )}
+        </div>
+        
+        {/* Secondary: The Course Title should be slightly smaller in font size with a very high opacity (text-white) */}
+        <p 
+          className="block-now__name text-xs font-bold leading-snug text-white"
+          style={{ textShadow: '0 1px 2px rgba(0,0,0,0.25)' }}
+        >
+          {ec.course.courseName}
+        </p>
       </div>
       
-      {/* Secondary: The Course Title should be slightly smaller in font size with a very high opacity (text-white/90) */}
-      <p className="block-now__name text-[11px] font-semibold leading-snug text-white/90 drop-shadow-sm">
-        {ec.course.courseName}
-      </p>
-      
-      {/* Tertiary: Time Slots must be rendered in a smaller, lighter font weight with lowered opacity (text-white/70) */}
-      <p className="block-now__time text-[9px] font-light mt-1.5 text-white/70 drop-shadow-sm">
-        {booking.startTime}–{booking.endTime}
-      </p>
+      {/* Tertiary: Time Slots must be rendered in a smaller, lighter font weight with lowered opacity */}
+      <div className="mt-2.5">
+        <p 
+          className="block-now__time text-[10.5px] font-bold text-white/95 flex items-center gap-1 shrink-0"
+          style={{ textShadow: '0 1px 2px rgba(0,0,0,0.2)' }}
+        >
+          <svg className="w-3.5 h-3.5 inline shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          {booking.startTime}–{booking.endTime}
+        </p>
 
-      {/* Expand panel */}
-      <div
-        className="expand-panel"
-        style={{
-          maxHeight: isExpanded ? 120 : 0,
-          opacity: isExpanded ? 1 : 0,
-          marginTop: isExpanded ? 8 : 0,
-        }}
-      >
-        <div className="pt-2 space-y-1" style={{ borderTop: '1px solid rgba(255,255,255,0.25)' }}>
-          {/* Tertiary: Supporting Room Numbers and Instructor rendered in a smaller, lighter font weight with lowered opacity (text-white/70) */}
-          <DetailRow label="Room" value={booking.room ?? ec.section.room ?? 'TBA'} />
-          <DetailRow label="Instructor" value={ec.section.instructorName ?? 'TBA'} />
+        {/* Expand panel */}
+        <div
+          className="expand-panel"
+          style={{
+            maxHeight: isExpanded ? 120 : 0,
+            opacity: isExpanded ? 1 : 0,
+            marginTop: isExpanded ? 8 : 0,
+          }}
+        >
+          <div className="pt-2 space-y-1.5" style={{ borderTop: '1px solid rgba(255,255,255,0.3)' }}>
+            <DetailRow label="Room" value={booking.room ?? ec.section.room ?? 'TBA'} />
+            <DetailRow label="Instructor" value={ec.section.instructorName ?? 'TBA'} />
+          </div>
         </div>
       </div>
     </div>
@@ -444,8 +458,8 @@ function TimetableCard({
 function DetailRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center justify-between gap-2">
-      <span className="text-[10px] font-light text-white/70">{label}</span>
-      <span className="text-[10px] font-light text-right truncate drop-shadow-sm text-white/70">{value}</span>
+      <span className="text-[11px] font-semibold text-white/90">{label}</span>
+      <span className="text-[11px] font-bold text-right truncate text-white" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.2)' }}>{value}</span>
     </div>
   );
 }

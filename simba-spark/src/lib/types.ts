@@ -33,6 +33,8 @@ export interface User {
   studentId?: string;
   gpa?: number;
   department?: string;
+  faculty?: string;
+  credits?: number;
   /** Optional avatar URL; if absent we render an initials avatar. */
   avatarUrl?: string;
 }

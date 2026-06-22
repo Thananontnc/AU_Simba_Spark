@@ -25,16 +25,18 @@ import { weekdaysInRange } from './date-utils';
 const users: User[] = [
   {
     id: 3,
-    fullName: 'Thong Bunjua',
+    fullName: 'Prathomporn Bunjua',
     email: 'student@simba.au',
     role: 'student',
     isAuthorized: true,
     msOid: '9a7c2f1e-4b3d-4c8a-9e6f-7d2b1a0c3e4f',
     msVerified: true,
     // Nostalgic profile summary fields (sidebar top block).
-    studentId: '6401234',
-    gpa: 3.65,
-    department: 'School of Information Technology',
+    studentId: '6710990',
+    gpa: 3.61,
+    department: 'COMPUTER SCIENCE',
+    faculty: 'ENGINEERING, SCIENCE AND TECHNOLOGY',
+    credits: 68,
   },
   {
     id: 2,
