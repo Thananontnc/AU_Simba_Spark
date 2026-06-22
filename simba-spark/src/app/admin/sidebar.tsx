@@ -51,9 +51,9 @@ export default function Sidebar({ userName, userEmail, signOutAction }: Props) {
         <Image
           src="/simba-logo.webp"
           alt="Simba"
-          width={28}
-          height={28}
-          className="shrink-0 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6"
+          width={36}
+          height={36}
+          className="shrink-0"
         />
         <div className="transition-all duration-300 transform group-hover:translate-x-1 origin-left">
           <p className="text-sm font-semibold text-white leading-tight transition-colors duration-300 group-hover:text-amber-400">Simba Spark</p>

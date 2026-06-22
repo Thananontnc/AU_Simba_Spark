@@ -70,9 +70,9 @@ export default function StudentSidebar({ data }: Props) {
           <Image
             src="/simba-logo.webp"
             alt="Simba Spark Logo"
-            width={24}
-            height={24}
-            className="shrink-0 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6"
+            width={36}
+            height={36}
+            className="shrink-0"
             priority
           />
         </div>

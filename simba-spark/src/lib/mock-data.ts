@@ -170,11 +170,10 @@ const bookings: Booking[] = [
   // CS101 — daily 09:00–10:30 in A72. One admin override (Mon 22 Jun) to demo
   // the pulse interaction.
   ...buildBlock(1, 'Room A72', block1, '09:00', '10:30', ['2026-06-22'], 'lecture'),
-  // MA101 — daily 11:00–12:30 in B10.
-  ...buildBlock(2, 'Room B10', block1, '11:00', '12:30', [], 'lecture'),
-  // EN101 — daily 14:00–15:30 in C05 (afternoons, 3 days/week rhythm is
-  // possible later; for the 10-day demo we keep it daily).
-  ...buildBlock(3, 'Room C05', block1, '14:00', '15:30', [], 'lab'),
+  // MA101 — daily 12:00–13:30 in B10.
+  ...buildBlock(2, 'Room B10', block1, '12:00', '13:30', [], 'lecture'),
+  // EN101 — daily 15:00–16:30 in C05.
+  ...buildBlock(3, 'Room C05', block1, '15:00', '16:30', [], 'lab'),
 ];
 
 // ---------------------------------------------------------------------------
@@ -194,7 +193,7 @@ const notifications: Notification[] = [
   {
     id: 2,
     title: 'Manual override — CS101 on 22 Jun',
-    body: 'An admin moved CS101 to 13:00–14:30 to clear a room clash. Tap the highlighted slot to review.',
+    body: 'An admin changed the room for CS101 to Room A72 to clear a clash. Tap the highlighted slot to review.',
     createdAt: now - 26 * hour,
     level: 'override',
   },

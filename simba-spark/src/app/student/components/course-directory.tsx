@@ -96,7 +96,7 @@ function Header({
         </h2>
         <p className="text-sm mt-0.5" style={{ color: 'var(--tx-2)' }}>
           {count} enrolled course{count === 1 ? '' : 's'} · {totalCredits} credits total.
-          {' '}Hover a card, then tap <span style={{ color: 'var(--accent-2)', fontWeight: 600 }}>Details</span> for room &amp; instructor.
+          {' '}Hover a card, then tap <span style={{ color: 'var(--accent-2)', fontWeight: 600 }}>Details </span> for room &amp; instructor.
         </p>
       </div>
 

@@ -11,7 +11,7 @@ type Props = { data: StudentDashboardData };
 // GAPS between classes visible as faint empty cells (a class at 09:00–10:30
 // leaves 10:00 + 10:30 + half of 11:00 as free time). Real-timetable behavior.
 // ────────────────────────────────────────────────────────────────────────────
-const HOURS = ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00'] as const;
+const HOURS = ['09:00', '10:30', '12:00', '13:30', '15:00', '16:30', '18:00', '19:30', '21:00'] as const;
 
 // Stable warm-orange shade per time band (same time = same color).
 function shadeForTime(startTime: string) {
@@ -63,34 +63,30 @@ export default function TimetableGrid({ data }: Props) {
     );
   }
 
-  // Does a booking cover this hour row? (for placing a card so it visually
-  // spans from its start through its end)
-  function bookingCovering(iso: string, hourStart: string): Booking | undefined {
-    return allBookings.find((b) => {
-      if (b.date !== iso) return false;
-      const bStart = toMin(b.startTime);
-      const h = toMin(hourStart);
-      // The card "anchors" on the row equal to its start time.
-      return h === bStart;
-    });
-  }
-  // How many hour-rows does a booking span? (for the card height)
-  function spanRows(b: Booking): number {
-    return Math.max(1, Math.round((toMin(b.endTime) - toMin(b.startTime)) / 60));
-  }
+
 
   const renderGrid = (wIdx: number) => {
     const wWeek = weeks[wIdx] ?? [];
     const wColumns = weekColumns(wWeek);
 
     return (
-      <div className="grid gap-1" style={{ gridTemplateColumns: `48px repeat(7, minmax(0, 1fr))` }}>
+      <div
+        className="grid gap-1"
+        style={{
+          gridTemplateColumns: `48px repeat(7, minmax(0, 1fr))`,
+          gridTemplateRows: `auto repeat(${HOURS.length}, minmax(56px, auto))`,
+        }}
+      >
         {/* Header row: corner + day columns */}
-        <div />
+        <div style={{ gridColumn: 1, gridRow: 1 }} />
         {wColumns.map((col, i) => {
           const isToday = col?.iso === nowIso;
           return (
-            <div key={i} className="text-center pb-2 select-none">
+            <div
+              key={i}
+              className="text-center pb-2 select-none"
+              style={{ gridColumn: i + 2, gridRow: 1 }}
+            >
               {col ? (
                 <>
                   <p
@@ -119,46 +115,85 @@ export default function TimetableGrid({ data }: Props) {
         })}
 
         {/* Body: one row per hour */}
-        {HOURS.map((hour) => (
-          <RowFragment key={hour}>
-            {/* Hour label */}
-            <div className="flex items-start justify-end pr-2 pt-1.5 select-none">
-              <span className="text-[10px] font-medium" style={{ color: 'var(--tx-3)' }}>
-                {hour}
-              </span>
-            </div>
+        {HOURS.map((hour, hIdx) => {
+          const gridRow = hIdx + 2;
+          return (
+            <RowFragment key={hour}>
+              {/* Hour label */}
+              <div
+                className="flex items-start justify-end pr-2 pt-1.5 select-none"
+                style={{ gridColumn: 1, gridRow }}
+              >
+                <span className="text-[10px] font-medium" style={{ color: 'var(--tx-3)' }}>
+                  {hour}
+                </span>
+              </div>
 
-            {wColumns.map((col, ci) => {
-              if (!col) return <WeekendCell key={ci} />;
+              {wColumns.map((col, ci) => {
+                const gridCol = ci + 2;
+                if (!col) {
+                  return <WeekendCell key={ci} gridCol={gridCol} gridRow={gridRow} />;
+                }
 
-              const isToday = col.iso === nowIso;
-              const booking = bookingCovering(col.iso, hour);
+                const isToday = col.iso === nowIso;
 
-              // No class anchored here → clean hollow empty cell (free time).
-              if (!booking) return <EmptyCell key={ci} isToday={isToday} />;
+                // Check if this hour slot overlaps with any booking on this day
+                const slotStart = toMin(hour);
+                const slotEnd = slotStart + 90;
 
-              const ec = courseBySectionId.get(booking.sectionId)!;
-              const span = spanRows(booking);
-              const inSession =
-                isToday && nowMin >= toMin(booking.startTime) && nowMin < toMin(booking.endTime);
+                const dayBookings = allBookings.filter((b) => b.date === col.iso);
+                const overlappingBooking = dayBookings.find((b) => {
+                  const bStart = toMin(b.startTime);
+                  const bEnd = toMin(b.endTime);
+                  return slotStart < bEnd && bStart < slotEnd;
+                });
 
-              return (
-                <TimetableCard
-                  key={booking.id}
-                  booking={booking}
-                  ec={ec}
-                  shade={shadeForTime(booking.startTime)}
-                  span={span}
-                  isExpanded={expandedId === booking.id}
-                  isToday={isToday}
-                  inSession={inSession}
-                  onToggle={() => setExpandedId(expandedId === booking.id ? null : booking.id)}
-                  matchesFilter={activeFilter === 'all' || booking.type === activeFilter}
-                />
-              );
-            })}
-          </RowFragment>
-        ))}
+                if (!overlappingBooking) {
+                  return <EmptyCell key={ci} isToday={isToday} gridCol={gridCol} gridRow={gridRow} />;
+                }
+
+                // If overlapping booking exists, find all hours in HOURS that overlap with it
+                const overlappingHours = HOURS.filter((h) => {
+                  const hStart = toMin(h);
+                  const hEnd = hStart + 90;
+                  const bStart = toMin(overlappingBooking.startTime);
+                  const bEnd = toMin(overlappingBooking.endTime);
+                  return hStart < bEnd && bStart < hEnd;
+                });
+
+                // Only render the card in the FIRST overlapping hour slot
+                if (hour === overlappingHours[0]) {
+                  const ec = courseBySectionId.get(overlappingBooking.sectionId)!;
+                  const span = overlappingHours.length;
+                  const inSession =
+                    isToday &&
+                    nowMin >= toMin(overlappingBooking.startTime) &&
+                    nowMin < toMin(overlappingBooking.endTime);
+
+                  return (
+                    <TimetableCard
+                      key={overlappingBooking.id}
+                      booking={overlappingBooking}
+                      ec={ec}
+                      shade={shadeForTime(overlappingBooking.startTime)}
+                      span={span}
+                      isExpanded={expandedId === overlappingBooking.id}
+                      isToday={isToday}
+                      inSession={inSession}
+                      onToggle={() => setExpandedId(expandedId === overlappingBooking.id ? null : overlappingBooking.id)}
+                      matchesFilter={activeFilter === 'all' || overlappingBooking.type === activeFilter}
+                      gridCol={gridCol}
+                      gridRow={gridRow}
+                    />
+                  );
+                }
+
+                // For subsequent overlapping slots, return null (it will be filled by the spanned card)
+                return null;
+              })}
+            </RowFragment>
+          );
+        })}
       </div>
     );
   };
@@ -268,6 +303,8 @@ function TimetableCard({
   inSession,
   onToggle,
   matchesFilter,
+  gridCol,
+  gridRow,
 }: {
   booking: Booking;
   ec: EnrolledCourse;
@@ -278,6 +315,8 @@ function TimetableCard({
   inSession: boolean;
   onToggle: () => void;
   matchesFilter: boolean;
+  gridCol: number;
+  gridRow: number;
 }) {
   const isOverride = !!booking.adminOverride;
   const fill = shade.bg;
@@ -299,6 +338,8 @@ function TimetableCard({
       ].join(' ')}
       style={{
         background: fill,
+        gridColumn: gridCol,
+        gridRow: `${gridRow} / span ${span}`,
         // Span multiple hour-rows: each row ~ 56px + 4px gap.
         minHeight: span * 56 + (span - 1) * 4,
         boxShadow: 'inset 0 0 0 1px rgba(0,0,0,0.05)',
@@ -361,7 +402,7 @@ function RowFragment({ children }: { children: React.ReactNode }) {
 }
 
 /** Weekend — ultra-faint, clearly not a teaching day. */
-function WeekendCell() {
+function WeekendCell({ gridCol, gridRow }: { gridCol: number; gridRow: number }) {
   return (
     <div
       className="rounded-xl flex items-center justify-center"
@@ -369,6 +410,8 @@ function WeekendCell() {
         background: 'var(--empty-cell-bg)',
         border: '1px solid var(--empty-cell-border)',
         minHeight: 52,
+        gridColumn: gridCol,
+        gridRow: gridRow,
       }}
     >
       <span className="text-[9px]" style={{ color: 'var(--tx-3)', opacity: 0.35 }}>—</span>
@@ -377,7 +420,7 @@ function WeekendCell() {
 }
 
 /** Empty cell — clean hollow free-time placeholder. Transitioning container with dash / Free + icons cross-fading */
-function EmptyCell({ isToday }: { isToday: boolean }) {
+function EmptyCell({ isToday, gridCol, gridRow }: { isToday: boolean; gridCol: number; gridRow: number }) {
   return (
     <div
       className="rounded-xl transition-all duration-300 ease-in-out cursor-pointer flex items-center justify-center group relative min-h-[52px] hover:bg-orange-500/[0.04] dark:hover:bg-orange-500/[0.03] hover:border-[#FF6B00]/30 dark:hover:border-[#FF6B00]/20"
@@ -385,6 +428,8 @@ function EmptyCell({ isToday }: { isToday: boolean }) {
         borderWidth: '1px',
         borderStyle: 'solid',
         borderColor: isToday ? 'var(--empty-cell-border-today)' : 'var(--empty-cell-border)',
+        gridColumn: gridCol,
+        gridRow: gridRow,
       }}
     >
       {/* Simple dash showing when not hovered, fades out on hover */}
