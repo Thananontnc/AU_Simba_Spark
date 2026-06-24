@@ -13,8 +13,8 @@ INSERT INTO courses (course_name, course_code, credits) VALUES
 
 -- Timeframes (2-week blocks)
 INSERT INTO timeframes (label, start_date, end_date) VALUES
-  ('Block 1 — 2026', '2026-06-16', '2026-06-27'),
-  ('Block 2 — 2026', '2026-06-30', '2026-07-11');
+  ('Block 1 — 2026', '2026-06-22', '2026-07-03'),
+  ('Block 2 — 2026', '2026-07-06', '2026-07-17');
 
 -- Sections
 INSERT INTO sections (course_id, section_number, instructor_id, room, timeframe_id) VALUES

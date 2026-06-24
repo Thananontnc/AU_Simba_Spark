@@ -3,33 +3,39 @@
 @variant dark (&:where(.dark, .dark *));
 
 :root {
-  --bg:       #f5f5f5;
-  --surface:  #ffffff;
-  --subtle:   #f0f0f0;
-  --border:   #e5e5e5;
-  --tx:       #111111;
-  --tx-2:     #888888;
-  --tx-3:     #bbbbbb;
+  --bg:       #FAF9F6;   /* warm off-white canvas */
+  --surface:  #F9F8F5;   /* elegant warm white */
+  --subtle:   #F1EFEC;
+  --border:   rgba(228, 228, 231, 0.6); /* clean razor-thin gray */
+  --tx:       #27272a;   /* elegant dark slate */
+  --tx-2:     #71717a;   /* muted zinc */
+  --tx-3:     #a1a1aa;
   --accent:   #f5841f;
   --accent-2: #e8720d;
   --accent-fg:#ffffff;
-  --sidebar:  #111111;
-  --sidebar-2:#1c1c1c;
+  --sidebar:  #FDFDFD;   /* elegant soft ivory */
+  --sidebar-2:#F4F3EF;
+  --empty-cell-bg: #FAF9F7;
+  --empty-cell-border: rgba(228, 228, 231, 0.6);
+  --empty-cell-border-today: rgba(228, 228, 231, 1);
 }
 
 .dark {
-  --bg:       #111111;
-  --surface:  #1a1a1a;
-  --subtle:   #222222;
-  --border:   #2a2a2a;
-  --tx:       #f0f0f0;
-  --tx-2:     #888888;
-  --tx-3:     #444444;
+  --bg:       #1E1D1B;   /* smooth warm charcoal */
+  --surface:  #22211F;   /* flat sophisticated container */
+  --subtle:   #2A2927;
+  --border:   rgba(63, 63, 70, 0.4); /* ultra-subtle border */
+  --tx:       #f2ede3;   /* soft cream-white */
+  --tx-2:     #a8a29e;   /* muted amber/gray */
+  --tx-3:     #78716c;   
   --accent:   #f5841f;
   --accent-2: #ff9a3f;
   --accent-fg:#ffffff;
-  --sidebar:  #0a0a0a;
-  --sidebar-2:#141414;
+  --sidebar:  #1E1D1B;   /* charcoal sidebar */
+  --sidebar-2:#22211F;
+  --empty-cell-bg: transparent;
+  --empty-cell-border: rgba(63, 63, 70, 0.22);
+  --empty-cell-border-today: rgba(63, 63, 70, 0.35);
 }
 
 @theme inline {
@@ -42,6 +48,11 @@ body {
   color: var(--tx);
   font-family: var(--font-sans), system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
+}
+
+/* Smooth anchor scrolling for the student dashboard's in-page nav. */
+html {
+  scroll-behavior: smooth;
 }
 
 * { box-sizing: border-box; }
@@ -127,16 +138,14 @@ body {
 .card-premium {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: 20px; /* rounded-2xl-ish — soft luxury curves */
   box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.03), 0 2px 8px -1px rgba(0, 0, 0, 0.02);
   transition: box-shadow 0.25s ease, border-color 0.25s ease;
 }
 .dark .card-premium {
   box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.3), 0 2px 8px -1px rgba(0, 0, 0, 0.2);
 }
-.card-premium:hover {
-  border-color: rgba(245, 132, 31, 0.25);
-}
+
 
 /* Page fade-in */
 @keyframes fadeIn {
@@ -164,4 +173,77 @@ body {
   background: var(--surface);
   box-shadow: 0 0 0 2px rgba(245, 132, 31, 0.15);
 }
+
+/* ============================================================ */
+/* Student Schedule — calendar interactions                      */
+/* ============================================================ */
+
+/* Hovered block — a quiet lift, NOT a neon halo. We deliberately removed the
+   old 18px orange box-shadow (gaming/neon vibe). Now hover just nudges the
+   card up 1px and deepens its fill slightly. */
+.block-glow {
+  transform: translateY(-1px);
+  filter: brightness(1.06);
+}
+
+/* Admin override — NO animated ring. We replaced the pulsing box-shadow with a
+   quiet, static 3px orange LEFT border accent. Reads as "flagged" without the
+   gaming-room strobe. */
+.block-override {
+  border-left: 3px solid var(--accent) !important;
+}
+
+/* The "currently in session" card — a calm, solid orange fill so students can
+   instantly spot where they should be RIGHT NOW. Solid (not glowing). */
+.block-now {
+  border-color: var(--accent) !important;
+}
+.block-now .block-now__code { color: var(--accent-fg) !important; }
+.block-now .block-now__name { color: rgba(255,255,255,0.85) !important; }
+.block-now .block-now__time { color: rgba(255,255,255,0.7) !important; }
+
+/* Smooth expand/collapse for the in-card detail panel. We animate max-height
+   + opacity so the tap-to-reveal instructor/room info slides open. */
+.expand-panel {
+  overflow: hidden;
+  transition: max-height 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+              opacity 0.2s ease,
+              margin-top 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* View-switch fade: re-triggered on weekly/monthly toggle. */
+@keyframes viewFade {
+  from { opacity: 0; transform: translateY(3px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.view-fade {
+  animation: viewFade 0.25s ease forwards;
+}
+
+/* Credits tracking bar — animates its fill width on mount (spec: "animates
+   its progress fill when a new course is successfully locked in"). */
+@keyframes creditFill {
+  from { width: 0%; }
+}
+.credit-fill {
+  animation: creditFill 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Notification pulse — replaced the breathing box-shadow ring with a quiet,
+   static left-border accent. No neon. */
+.notif-pulse {
+  border-left: 3px solid var(--accent) !important;
+}
+
+/* Dismiss fade-out — collapses height + fades a notification card out. */
+@keyframes notifOut {
+  from { opacity: 1; transform: translateX(0); max-height: 200px; }
+  to   { opacity: 0; transform: translateX(8px); max-height: 0; padding-top: 0; padding-bottom: 0; margin-bottom: 0; }
+}
+.notif-out {
+  animation: notifOut 0.32s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  overflow: hidden;
+}
+
+
 

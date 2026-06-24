@@ -42,13 +42,24 @@ export default function Sidebar({ userName, userEmail, signOutAction }: Props) {
   const sidebarContent = (
     <aside className="w-52 shrink-0 flex flex-col h-full" style={{ background: 'var(--sidebar)', borderRight: '1px solid rgba(255,255,255,0.06)' }}>
       {/* Brand */}
-      <div className="px-4 py-4 flex items-center gap-2.5" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-        <Image src="/simba-logo.webp" alt="Simba" width={28} height={28} className="shrink-0" />
-        <div>
-          <p className="text-sm font-semibold text-white leading-tight">Simba Spark</p>
-          <p className="text-[10px] leading-tight" style={{ color: 'rgba(255,255,255,0.3)' }}>Admin</p>
+      <button
+        onClick={() => window.location.reload()}
+        className="group px-4 py-4 flex items-center gap-2.5 w-full text-left focus:outline-none cursor-pointer"
+        style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}
+        aria-label="Refresh page"
+      >
+        <Image
+          src="/simba-logo.webp"
+          alt="Simba"
+          width={36}
+          height={36}
+          className="shrink-0"
+        />
+        <div className="transition-all duration-300 transform group-hover:translate-x-1 origin-left">
+          <p className="text-sm font-semibold text-white leading-tight transition-colors duration-300 group-hover:text-amber-400">Simba Spark</p>
+          <p className="text-[10px] leading-tight transition-colors duration-300" style={{ color: 'rgba(255,255,255,0.3)' }}>Admin</p>
         </div>
-      </div>
+      </button>
 
       {/* User info */}
       <div className="px-4 py-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>

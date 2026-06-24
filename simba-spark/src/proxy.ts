@@ -13,7 +13,10 @@ export default auth((req) => {
 
   const isAuthed = !!req.auth;
   const isAuthPage = pathname === '/login' || pathname === '/register';
-  const isProtected = pathname.startsWith('/admin') || pathname.startsWith('/instructor') || pathname.startsWith('/student');
+  // MOCK PHASE: the Student dashboard reads standalone mock data (no DB yet),
+  // so we intentionally do NOT gate /student behind auth. Re-add
+  // `pathname.startsWith('/student')` to this check once real auth/DB is wired.
+  const isProtected = pathname.startsWith('/admin') || pathname.startsWith('/instructor');
 
   if (isAuthed && isAuthPage) {
     return NextResponse.redirect(new URL(ROLE_HOME[role!] ?? '/', req.url));
