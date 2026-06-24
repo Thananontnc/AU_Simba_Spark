@@ -13,8 +13,10 @@
   --accent:   #f5841f;
   --accent-2: #e8720d;
   --accent-fg:#ffffff;
-  --sidebar:  #FDFDFD;   /* elegant soft ivory */
-  --sidebar-2:#F4F3EF;
+  --sidebar:  #111111;
+  --sidebar-2:#1c1c1c;
+  --student-sidebar:  #FDFDFD;
+  --student-sidebar-2:#F4F3EF;
   --empty-cell-bg: #FAF9F7;
   --empty-cell-border: rgba(228, 228, 231, 0.6);
   --empty-cell-border-today: rgba(228, 228, 231, 1);
@@ -31,8 +33,10 @@
   --accent:   #f5841f;
   --accent-2: #ff9a3f;
   --accent-fg:#ffffff;
-  --sidebar:  #1E1D1B;   /* charcoal sidebar */
-  --sidebar-2:#22211F;
+  --sidebar:  #0a0a0a;
+  --sidebar-2:#141414;
+  --student-sidebar:  #1E1D1B;
+  --student-sidebar-2:#22211F;
   --empty-cell-bg: transparent;
   --empty-cell-border: rgba(63, 63, 70, 0.22);
   --empty-cell-border-today: rgba(63, 63, 70, 0.35);

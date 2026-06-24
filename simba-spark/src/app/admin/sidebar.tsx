@@ -40,7 +40,7 @@ export default function Sidebar({ userName, userEmail, signOutAction }: Props) {
   }, []);
 
   const sidebarContent = (
-    <aside className="w-52 shrink-0 flex flex-col h-full" style={{ background: 'var(--sidebar)', borderRight: '1px solid rgba(255,255,255,0.06)' }}>
+    <aside className="w-52 shrink-0 flex flex-col h-full" style={{ background: '#111111', borderRight: '1px solid rgba(255,255,255,0.06)' }}>
       {/* Brand */}
       <button
         onClick={() => window.location.reload()}
@@ -121,7 +121,7 @@ export default function Sidebar({ userName, userEmail, signOutAction }: Props) {
       {/* Hamburger button — floats in top-left on mobile */}
       <button
         className="fixed top-3 left-4 z-50 lg:hidden flex items-center justify-center w-8 h-8 rounded-lg"
-        style={{ background: 'var(--sidebar)', color: 'rgba(255,255,255,0.7)', border: '1px solid rgba(255,255,255,0.08)' }}
+        style={{ background: '#111111', color: 'rgba(255,255,255,0.7)', border: '1px solid rgba(255,255,255,0.08)' }}
         onClick={() => setOpen(v => !v)}
         aria-label="Toggle menu"
       >

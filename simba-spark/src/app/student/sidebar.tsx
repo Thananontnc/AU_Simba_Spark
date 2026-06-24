@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
 import Image from 'next/image';
 import type { StudentDashboardData } from '@/lib/types';
 
@@ -30,9 +29,9 @@ const NAV_GROUPS: { heading: string; items: { key: string; label: string; href: 
   },
 ];
 
-type Props = { data: StudentDashboardData };
+type Props = { data: StudentDashboardData; signOutAction: () => Promise<void> };
 
-export default function StudentSidebar({ data }: Props) {
+export default function StudentSidebar({ data, signOutAction }: Props) {
   const { student, enrolledCourses } = data;
   const [open, setOpen] = useState(false); // mobile drawer
   const [active, setActive] = useState('overview'); // 'Overview' is active by default
@@ -53,7 +52,7 @@ export default function StudentSidebar({ data }: Props) {
   const sidebarContent = (
     <aside
       className="w-80 shrink-0 flex flex-col h-full overflow-y-auto"
-      style={{ background: 'var(--sidebar)', borderRight: '1px solid var(--border)' }}
+      style={{ background: 'var(--student-sidebar)', borderRight: '1px solid var(--border)' }}
     >
       {/* ---------- Brand Logo & App Name ---------- */}
       <button
@@ -217,14 +216,16 @@ export default function StudentSidebar({ data }: Props) {
 
       {/* Sign out */}
       <div className="px-3 py-3" style={{ borderTop: '1px solid var(--border)' }}>
-        <Link href="/login" className="sidebar-signout">
-          <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-            <polyline points="16 17 21 12 16 7" />
-            <line x1="21" y1="12" x2="9" y2="12" />
-          </svg>
-          Sign out
-        </Link>
+        <form action={signOutAction}>
+          <button type="submit" className="sidebar-signout">
+            <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+              <polyline points="16 17 21 12 16 7" />
+              <line x1="21" y1="12" x2="9" y2="12" />
+            </svg>
+            Sign out
+          </button>
+        </form>
       </div>
     </aside>
   );
@@ -255,7 +256,7 @@ export default function StudentSidebar({ data }: Props) {
       <button
         className="fixed top-3 left-4 z-50 lg:hidden flex items-center justify-center w-8 h-8 rounded-lg"
         style={{
-          background: 'var(--sidebar)',
+          background: 'var(--student-sidebar)',
           color: 'var(--tx)',
           border: '1px solid var(--border)',
         }}

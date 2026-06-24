@@ -1,16 +1,19 @@
+import { signOut } from '@/auth';
 import { ThemeToggle } from '@/components/theme-toggle';
 import StudentSidebar from './sidebar';
 import { mockDashboardData } from '@/lib/mock-data';
 
 export default function StudentLayout({ children }: { children: React.ReactNode }) {
-  // MOCK PHASE: read identity + enrolled courses from mock data to populate the
-  // nostalgic sidebar profile block. When real auth is wired in, replace with
-  // `const session = await auth();` and read session.user fields.
   const data = mockDashboardData;
+
+  async function handleSignOut() {
+    'use server';
+    await signOut({ redirectTo: '/login' });
+  }
 
   return (
     <div className="min-h-screen flex" style={{ background: 'var(--bg)', color: 'var(--tx)' }}>
-      <StudentSidebar data={data} />
+      <StudentSidebar data={data} signOutAction={handleSignOut} />
 
       {/* Content column */}
       <div className="flex-1 flex flex-col min-w-0">

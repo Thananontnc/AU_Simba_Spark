@@ -78,22 +78,26 @@ const users = await sql`SELECT * FROM users WHERE role = ${role}`;
 const bad = await sql(`SELECT * FROM users WHERE role = '${role}'`);
 ```
 
+## Next.js 16 warning
+
+Next.js 16 has breaking changes from prior versions. Before writing any Next.js-specific code, read the relevant guide in `node_modules/next/dist/docs/`. Heed deprecation notices.
+
 ## Architecture conventions
 
 - **Reads** — in Server Components (`await sql\`...\`` directly in page files). No API routes.
-- **Writes** (INSERT/UPDATE/DELETE) — Server Actions (`'use server'`), in `src/app/actions/`.
+- **Writes** (INSERT/UPDATE/DELETE) — Server Actions (`'use server'`). Complex actions go in `src/app/actions/`; simple one-off mutations can be inlined directly in page JSX (see `courses/page.tsx` for examples).
 - **Dynamic pages** — all data pages need `export const dynamic = 'force-dynamic';` or data appears frozen.
 - **Route protection** — `src/proxy.ts` (NOT `middleware.ts` — Next.js 16 renamed it). Redirects unauthenticated to `/login`, blocks cross-role access.
-- **Client components** — only for interactivity (modals, search, forms with local state). Named `*-client.tsx`.
+- **Client components** — only for interactivity (modals, search, forms with local state). Named `*-client.tsx`. Shared components live in `src/components/`.
 - **Role checking** — single helper only; never copy-paste checks.
 
 ## Theming
 
-CSS variables in `src/app/globals.css` — `:root` (light) and `.dark` (dark). Key vars: `--bg`, `--surface`, `--subtle`, `--border`, `--tx`, `--tx-2`, `--tx-3`, `--accent` (`#F5841F` Simba orange), `--sidebar`.
+CSS variables in `src/app/globals.css` — `:root` (light) and `.dark` (dark). Full var list: `--bg`, `--surface`, `--subtle`, `--border`, `--tx`, `--tx-2`, `--tx-3`, `--accent` (`#F5841F` Simba orange), `--accent-2`, `--accent-fg` (white), `--sidebar`, `--sidebar-2`.
 
 Dark mode toggled by adding `.dark` class to `<html>`. Sidebar uses its own `--sidebar` dark background regardless of theme. Theme persists via `localStorage`.
 
-Tailwind dark mode: `@variant dark { .dark & { ... } }` — NOT `darkMode: 'class'` config.
+Tailwind dark mode declaration (top of globals.css): `@variant dark (&:where(.dark, .dark *));` — NOT `darkMode: 'class'` config, NOT the `{ .dark & { ... } }` block syntax.
 
 Pre-built CSS classes for sidebar nav in `globals.css`: `.sidebar-link`, `.sidebar-icon`, `.sidebar-signout`.
 
@@ -210,10 +214,12 @@ Admin sidebar: logo → user name/email → nav (Users, Timeframes, Courses) →
 ## What is NOT yet built ❌
 
 ### Instructor (`/instructor/*`)
+Current `src/app/instructor/page.tsx` is a stub (welcome message + sign-out only). Needs:
 - **I1**: List of sections assigned to the logged-in instructor (with timeframe, room, enrolled student count)
 - **I2**: FCFS booking form — pick date + time slot → conflict check → create booking. Show existing bookings for that section.
 
 ### Student (`/student/*`)
+Current `src/app/student/page.tsx` is a stub (welcome message + sign-out only). Needs:
 - **S1**: Weekly calendar view (read-only). Shows bookings for sections the student is enrolled in. No editing.
 
 Build order: I1 → I2 → S1. Student view requires real bookings from I2.

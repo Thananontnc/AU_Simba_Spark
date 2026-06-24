@@ -35,7 +35,7 @@ export default function InstructorSidebar({ userName, userEmail, signOutAction }
   }, []);
 
   const sidebarContent = (
-    <aside className="w-52 shrink-0 flex flex-col h-full" style={{ background: 'var(--sidebar)', borderRight: '1px solid rgba(255,255,255,0.06)' }}>
+    <aside className="w-52 shrink-0 flex flex-col h-full" style={{ background: '#111111', borderRight: '1px solid rgba(255,255,255,0.06)' }}>
       {/* Brand */}
       <div className="px-4 py-4 flex items-center gap-2.5" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
         <Image src="/simba-logo.webp" alt="Simba" width={28} height={28} className="shrink-0" />
@@ -108,7 +108,7 @@ export default function InstructorSidebar({ userName, userEmail, signOutAction }
       {/* Hamburger */}
       <button
         className="fixed top-3 left-4 z-50 lg:hidden flex items-center justify-center w-8 h-8 rounded-lg"
-        style={{ background: 'var(--sidebar)', color: 'rgba(255,255,255,0.7)', border: '1px solid rgba(255,255,255,0.08)' }}
+        style={{ background: '#111111', color: 'rgba(255,255,255,0.7)', border: '1px solid rgba(255,255,255,0.08)' }}
         onClick={() => setOpen(v => !v)}
         aria-label="Toggle menu"
       >
