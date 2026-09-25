@@ -386,7 +386,7 @@ function TimetableCard({
           ? 'border-[var(--accent)]'
           : 'border-[var(--border)] hover:border-[#FF7A1A]/50 dark:hover:border-[#FF6B00]/60',
         isOverride ? 'block-override' : '',
-        inSession ? 'block-now ring-2 ring-orange-400/50' : '',
+        inSession ? 'block-now highlight-border-spark' : '',
         isDimmed ? 'opacity-15 scale-[0.98] pointer-events-none blur-[0.5px]' : 'opacity-100 scale-100',
       ].join(' ')}
       style={{
@@ -395,7 +395,7 @@ function TimetableCard({
         gridRow: `${gridRow} / span ${span}`,
         // Span multiple hour-rows: each row ~ 56px + 4px gap.
         minHeight: span * 56 + (span - 1) * 4,
-        boxShadow: '0 4px 12px rgba(0,0,0,0.12), inset 0 1px 1px rgba(255,255,255,0.25)',
+        boxShadow: inSession ? undefined : '0 4px 12px rgba(0,0,0,0.12), inset 0 1px 1px rgba(255,255,255,0.25)',
       }}
       title={`${ec.course.courseName} · ${timeBand(booking.startTime, booking.endTime)}`}
     >

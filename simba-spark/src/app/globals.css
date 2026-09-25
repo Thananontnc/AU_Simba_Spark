@@ -199,12 +199,29 @@ html {
 
 /* The "currently in session" card — a calm, solid orange fill so students can
    instantly spot where they should be RIGHT NOW. Solid (not glowing). */
-.block-now {
+.block-now:not(.highlight-border-spark) {
   border-color: var(--accent) !important;
 }
 .block-now .block-now__code { color: var(--accent-fg) !important; }
 .block-now .block-now__name { color: rgba(255,255,255,0.85) !important; }
 .block-now .block-now__time { color: rgba(255,255,255,0.7) !important; }
+
+/* Minimal, user-friendly animated border spark for currently active session */
+@keyframes borderSpark {
+  0%, 100% {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 1.5px var(--accent), 0 4px 12px rgba(245, 132, 31, 0.2), inset 0 1px 1px rgba(255, 255, 255, 0.2);
+  }
+  50% {
+    border-color: #FFB87A;
+    box-shadow: 0 0 0 3px #FFB87A, 0 6px 18px rgba(245, 132, 31, 0.45), inset 0 1px 1px rgba(255, 255, 255, 0.35);
+  }
+}
+
+.highlight-border-spark {
+  border-width: 2px !important;
+  animation: borderSpark 2s infinite ease-in-out;
+}
 
 /* Smooth expand/collapse for the in-card detail panel. We animate max-height
    + opacity so the tap-to-reveal instructor/room info slides open. */
