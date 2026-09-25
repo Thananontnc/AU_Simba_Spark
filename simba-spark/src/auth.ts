@@ -4,6 +4,7 @@ import bcrypt from 'bcrypt';
 import sql from '@/lib/db';
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
+  secret: process.env.AUTH_SECRET || 'mock-secret-for-local-dev-only',
   providers: [
     Credentials({
       credentials: {
