@@ -3,7 +3,7 @@ import { ThemeToggle } from '@/components/theme-toggle';
 import StudentSidebar from './sidebar';
 import { mockDashboardData } from '@/lib/mock-data';
 
-export default function StudentLayout({ children }: { children: React.ReactNode }) {
+export default async function StudentLayout({ children }: { children: React.ReactNode }) {
   const data = mockDashboardData;
 
   async function handleSignOut() {
